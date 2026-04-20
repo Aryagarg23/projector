@@ -31,7 +31,8 @@ export default defineConfig({
     },
   },
   server: {
-    middlewareMode: true,
+    // Opt-in only: forcing middleware mode breaks `vite` CLI dev server startup.
+    middlewareMode: process.env.VITE_MIDDLEWARE_MODE === 'true',
   },
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
