@@ -46,10 +46,19 @@ export function AnswerScreen() {
     }
 
     loadActive();
-    const tick = setInterval(loadActive, 2000);
+
+    const subscription = supabase
+      .channel("poll_state_changes")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "poll_state" },
+        () => loadActive()
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
-      clearInterval(tick);
+      subscription.unsubscribe();
     };
   }, []);
 
