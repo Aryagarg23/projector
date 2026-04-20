@@ -56,9 +56,12 @@ export function AnswerScreen() {
       )
       .subscribe();
 
+    const tick = setInterval(loadActive, 500);
+
     return () => {
       cancelled = true;
       subscription.unsubscribe();
+      clearInterval(tick);
     };
   }, []);
 
