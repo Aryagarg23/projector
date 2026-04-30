@@ -3,6 +3,7 @@ import { PerspectivePanel } from "./PerspectivePanel";
 import { GrainyGradient } from "./GrainyGradient";
 import { LiveBarGraphRealtime } from "./LiveBarGraphRealtime";
 import { HeroOverlay } from "./HeroOverlay";
+import { LogoTicker } from "./LogoTicker";
 import {
   slides,
   defaultCornerInset,
@@ -64,12 +65,7 @@ function LiveBottomSurface({
 function LiveTopSurface({ slide }: { slide: SlideConfig }) {
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <GrainyGradient config={slide.top.gradient} dpiScale={1} />
-      <HeroOverlay
-        config={slide.top}
-        slideId={`results-top-${slide.id}`}
-        fontScale={1}
-      />
+      <LogoTicker config={slide.top.gradient} dpiScale={1} />
     </div>
   );
 }
