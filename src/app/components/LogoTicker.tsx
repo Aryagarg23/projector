@@ -34,30 +34,31 @@ export function LogoTicker({ config, dpiScale = 1 }: Props) {
 
       {/* Scrolling logo track — logos are white, multiply blend makes black areas opaque */}
       <div
-        className="absolute inset-0 flex items-center"
+        className="absolute inset-0 flex"
         style={{ maskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)" }}
       >
         <div
           ref={trackRef}
-          className="flex items-center gap-16 ticker-scroll"
-          style={{ willChange: "transform" }}
+          className="flex items-stretch ticker-scroll"
+          style={{ willChange: "transform", height: "100%" }}
         >
           {TICKER_ITEMS.map((logo, i) => (
-            <div key={i} className="flex items-center gap-16 flex-shrink-0">
+            <div key={i} className="flex items-stretch flex-shrink-0 gap-12 px-12">
               <img
                 src={logo.src}
                 alt={logo.alt}
-                className="h-10 w-auto object-contain flex-shrink-0"
+                className="w-auto object-contain flex-shrink-0"
                 style={{
+                  height: "100%",
                   filter: "brightness(10) saturate(0)",
                   mixBlendMode: "screen",
                   opacity: 0.92,
                 }}
               />
-              {/* Divider dot */}
+              {/* Divider */}
               <div
-                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.25)", mixBlendMode: "screen" }}
+                className="w-px self-stretch flex-shrink-0"
+                style={{ background: "rgba(255,255,255,0.15)", mixBlendMode: "screen" }}
               />
             </div>
           ))}
