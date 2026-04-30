@@ -83,8 +83,9 @@ export function useLivePoll(): LivePoll {
         .eq("poll_id", poll!.id);
       if (cancelled || !data) return;
       const next: LiveCounts = { ...ZERO };
-      for (const row of data as { choice: "A" | "B" | "C" | "D"; votes: number }[]) {
-        next[row.choice] = row.votes;
+      // bigint count columns can serialize as strings — coerce to Number.
+      for (const row of data as { choice: "A" | "B" | "C" | "D"; votes: number | string }[]) {
+        next[row.choice] = Number(row.votes) || 0;
       }
       setCounts(next);
     }

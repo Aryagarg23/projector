@@ -38,25 +38,30 @@ export function useAllPollCounts(): AllPollCounts {
     let cancelled = false;
 
     async function fetchAll() {
-      const { data: pollRows } = await supabase
+      const { data: pollRows, error: pollErr } = await supabase
         .from("polls")
         .select("id, slide_id, question, option_a, option_b, option_c, option_d");
-      const { data: countRows } = await supabase
+      const { data: countRows, error: countErr } = await supabase
         .from("vote_counts")
         .select("poll_id, choice, votes");
       if (cancelled) return;
+      if (pollErr) console.warn("[useAllPollCounts] polls fetch error:", pollErr);
+      if (countErr) console.warn("[useAllPollCounts] vote_counts fetch error:", countErr);
       if (pollRows) {
         const map: Record<string, PollRow> = {};
         for (const p of pollRows as PollRow[]) {
-          map[p.slide_id] = p;
+          // Coerce id in case PostgREST returns bigint as string
+          map[p.slide_id] = { ...p, id: Number(p.id) };
         }
         setPollsBySlide(map);
       }
       if (countRows) {
         const map: Record<number, ChoiceCounts> = {};
-        for (const r of countRows as { poll_id: number; choice: keyof ChoiceCounts; votes: number }[]) {
-          if (!map[r.poll_id]) map[r.poll_id] = { A: 0, B: 0, C: 0, D: 0 };
-          map[r.poll_id][r.choice] = r.votes;
+        for (const r of countRows as { poll_id: number | string; choice: keyof ChoiceCounts; votes: number | string }[]) {
+          // bigint columns (poll_id, count) can come back as strings — coerce.
+          const pid = Number(r.poll_id);
+          if (!map[pid]) map[pid] = { A: 0, B: 0, C: 0, D: 0 };
+          map[pid][r.choice] = Number(r.votes) || 0;
         }
         setCountsByPollId(map);
       }
