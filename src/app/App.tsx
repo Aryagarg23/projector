@@ -99,15 +99,24 @@ export default function App() {
   }, []);
 
   // Auto-cycle graph every graphSwapDelay seconds. The timer always runs;
-  // vote arrivals reset it.
+  // vote arrivals reset it (cycleResetKey).
   const [cycleResetKey, setCycleResetKey] = useState(0);
+  const graphSwapDelayRef = useRef(graphSwapDelay);
+  graphSwapDelayRef.current = graphSwapDelay;
+
   useEffect(() => {
     if (qCount === 0) return;
-    const timer = setInterval(() => {
-      setGraphQIdx((i) => (i + 1) % qCount);
-    }, Math.max(1000, graphSwapDelay * 1000));
-    return () => clearInterval(timer);
-  }, [qCount, cycleResetKey, graphSwapDelay]);
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = () => {
+      const ms = Math.max(1000, graphSwapDelayRef.current * 1000);
+      timer = setTimeout(() => {
+        setGraphQIdx((i) => (i + 1) % qCount);
+        schedule();
+      }, ms);
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [qCount, cycleResetKey]);
 
   // When a vote arrives (counts total increases), jump graph to live poll's question
   // and restart the 45s timer.
