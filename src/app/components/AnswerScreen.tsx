@@ -95,20 +95,22 @@ export function AnswerScreen() {
     const currentId = activePoll.id;
     const { data: all } = await supabase
       .from("polls")
-      .select("id, position")
+      .select("*")
       .order("position");
     if (!all || all.length === 0) return;
-    const idx = all.findIndex((p) => p.id === currentId);
+    const idx = (all as Poll[]).findIndex((p) => p.id === currentId);
     if (idx < 0) return;
-    const next = all[(idx + 1) % all.length];
-    await supabase
-      .from("poll_state")
-      .update({
-        active_poll_id: next.id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", 1);
+    const next = (all as Poll[])[(idx + 1) % all.length];
+    // Optimistic local swap: switch activePoll AND clear lastChoice in the
+    // same render so there's no flash of the old question's text.
+    setActivePoll(next);
     setLastChoice(null);
+    // Fire-and-forget DB update — listeners on other clients will pick it up.
+    supabase
+      .from("poll_state")
+      .update({ active_poll_id: next.id, updated_at: new Date().toISOString() })
+      .eq("id", 1)
+      .then(() => {});
   }
 
   useEffect(() => {
@@ -123,8 +125,13 @@ export function AnswerScreen() {
     ? [activePoll.option_a, activePoll.option_b, activePoll.option_c, activePoll.option_d]
     : [];
 
+  const HEAD_FONT = "'Archivo Black', 'Archivo', system-ui, sans-serif";
+
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden select-none relative text-white">
+    <div
+      className="w-screen h-screen bg-black overflow-hidden select-none relative text-white uppercase"
+      style={{ fontFamily: HEAD_FONT, fontWeight: 900, letterSpacing: "-0.005em" }}
+    >
       <GrainyGradient config={gradient} dpiScale={1} />
       <div
         className="absolute inset-0 pointer-events-none"
@@ -144,10 +151,7 @@ export function AnswerScreen() {
               exit={{ opacity: 0 }}
               className="flex-1 flex items-center justify-center"
             >
-              <div
-                className="text-xs tracking-[0.3em] opacity-50"
-                style={{ fontFamily: "monospace" }}
-              >
+              <div className="text-sm opacity-50" style={{ letterSpacing: "0.3em" }}>
                 STANDBY
               </div>
             </motion.div>
@@ -160,24 +164,27 @@ export function AnswerScreen() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-2"
+              className="flex-1 flex flex-col items-start justify-center gap-4 text-left px-2"
             >
-              <div className="text-base opacity-60">You answered</div>
-              <div className="text-3xl sm:text-4xl font-semibold leading-tight">
+              <div className="text-base opacity-60">YOU ANSWERED</div>
+              <div className="text-4xl sm:text-5xl leading-tight" style={{ letterSpacing: "-0.01em" }}>
                 {options[LABELS.indexOf(lastChoice)]}
               </div>
               <div className="text-sm opacity-50 mt-2">
-                Thank you for your time.
+                THANK YOU FOR YOUR TIME.
               </div>
               <button
                 onClick={advance}
-                className="mt-6 px-6 py-2 rounded-lg text-sm"
+                className="mt-6 px-6 py-3 rounded-lg text-sm"
                 style={{
                   background: "rgba(255,255,255,0.08)",
                   border: "1px solid rgba(255,255,255,0.18)",
+                  fontFamily: HEAD_FONT,
+                  fontWeight: 900,
+                  letterSpacing: "0.05em",
                 }}
               >
-                Done
+                DONE
               </button>
             </motion.div>
           )}
@@ -191,7 +198,10 @@ export function AnswerScreen() {
               transition={{ duration: 0.25 }}
               className="flex-1 flex flex-col gap-4"
             >
-              <h1 className="text-lg sm:text-xl font-semibold leading-snug">
+              <h1
+                className="text-2xl sm:text-3xl leading-tight text-left"
+                style={{ letterSpacing: "-0.01em" }}
+              >
                 {activePoll.question}
               </h1>
 
@@ -200,36 +210,38 @@ export function AnswerScreen() {
                   const text = options[i];
                   if (text == null || text === "") return null;
                   return (
-                  <motion.button
-                    key={label}
-                    onClick={() => submit(label)}
-                    disabled={submitting}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1 min-h-[56px] w-full px-4 flex items-baseline gap-4 text-left rounded-lg disabled:opacity-50"
-                    style={{
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                    }}
-                  >
-                    <span
-                      className="text-sm opacity-40 tabular-nums"
-                      style={{ fontFamily: "monospace" }}
+                    <motion.button
+                      key={label}
+                      onClick={() => submit(label)}
+                      disabled={submitting}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex-1 min-h-[64px] w-full px-4 flex items-center gap-4 text-left rounded-lg disabled:opacity-50"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        fontFamily: HEAD_FONT,
+                        fontWeight: 900,
+                      }}
                     >
-                      {label}
-                    </span>
-                    <span className="text-base sm:text-lg">{text}</span>
-                  </motion.button>
+                      <span
+                        className="text-2xl opacity-50 tabular-nums"
+                        style={{ letterSpacing: "-0.01em" }}
+                      >
+                        {label}
+                      </span>
+                      <span
+                        className="text-lg sm:text-xl leading-tight"
+                        style={{ letterSpacing: "-0.005em" }}
+                      >
+                        {text}
+                      </span>
+                    </motion.button>
                   );
                 })}
               </div>
 
               {error && (
-                <div
-                  className="text-xs text-red-300"
-                  style={{ fontFamily: "monospace" }}
-                >
-                  {error}
-                </div>
+                <div className="text-xs text-red-300">{error}</div>
               )}
             </motion.div>
           )}

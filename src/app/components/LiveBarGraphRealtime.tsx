@@ -8,9 +8,8 @@ interface Props {
   fontScale?: number;
 }
 
-// HTML/CSS-based bar graph. CSS transitions handle the smooth growth so we
-// don't need a per-frame rAF loop. Percentages are positioned outside the bar
-// area so they never clip, and the option label stays large/readable.
+const HEAD_FONT = "'Archivo Black', 'Archivo', system-ui, sans-serif";
+
 export function LiveBarGraphRealtime({
   answers,
   accentHue = 180,
@@ -19,8 +18,6 @@ export function LiveBarGraphRealtime({
   const total = answers.reduce((s, a) => s + a.votes, 0);
   const maxVotes = Math.max(1, ...answers.map((a) => a.votes));
 
-  // Display-side smoothing: lerp from previous values toward current votes
-  // so bars don't jump when counts arrive.
   const [displayed, setDisplayed] = useState<number[]>(() => answers.map((a) => a.votes));
   const targetRef = useRef<number[]>(answers.map((a) => a.votes));
   targetRef.current = answers.map((a) => a.votes);
@@ -33,7 +30,6 @@ export function LiveBarGraphRealtime({
           const t = targetRef.current[i] ?? 0;
           return v + (t - v) * 0.12;
         });
-        // Stop animating when we're within 0.05 of all targets
         const settled = next.every((v, i) => Math.abs((targetRef.current[i] ?? 0) - v) < 0.05);
         if (!settled) raf = requestAnimationFrame(tick);
         return next;
@@ -50,7 +46,7 @@ export function LiveBarGraphRealtime({
     >
       <div
         className="flex items-end justify-around w-full h-full"
-        style={{ gap: `${2 * fontScale}vw`, paddingTop: `${7 * fontScale}vh` }}
+        style={{ gap: `${2 * fontScale}vw`, paddingTop: `${5 * fontScale}vh` }}
       >
         {answers.map((answer, i) => {
           const displayVotes = displayed[i] ?? 0;
@@ -59,42 +55,21 @@ export function LiveBarGraphRealtime({
           const hue = (accentHue + i * 25) % 360;
           const barColorTop = `hsl(${hue}, 80%, 62%)`;
           const barColorBot = `hsl(${hue}, 70%, 38%)`;
-          const labelColor = `hsl(${hue}, 80%, 72%)`;
+          const labelColor = `hsl(${hue}, 80%, 75%)`;
 
           return (
             <div
               key={answer.label}
-              className="flex flex-col items-center justify-end h-full"
+              className="flex flex-col items-stretch justify-end h-full"
               style={{ flex: "1 1 0", minWidth: 0 }}
             >
-              {/* Percentage — sits ABOVE the bar, never clips */}
-              <div
-                className="text-white/95 tabular-nums"
-                style={{
-                  fontFamily: "monospace",
-                  fontSize: `${3.2 * fontScale}vh`,
-                  fontWeight: 600,
-                  marginBottom: `${0.8 * fontScale}vh`,
-                  textShadow: "0 0 20px rgba(255,255,255,0.3)",
-                  lineHeight: 1.3,
-                  paddingTop: "0.15em",
-                }}
-              >
-                {Math.round(pct)}%
-              </div>
-
-              {/* Bar — flex-grows to fill, animated via CSS */}
+              {/* Bar — fills available space, percentage anchored INSIDE at top */}
               <div
                 className="w-full relative"
-                style={{
-                  flex: "1 1 0",
-                  display: "flex",
-                  alignItems: "flex-end",
-                  minHeight: 0,
-                }}
+                style={{ flex: "1 1 0", display: "flex", alignItems: "flex-end", minHeight: 0 }}
               >
                 <div
-                  className="w-full rounded-t-lg"
+                  className="w-full rounded-t-lg relative"
                   style={{
                     height: `${heightPct}%`,
                     background: `linear-gradient(to top, ${barColorBot}, ${barColorTop})`,
@@ -102,37 +77,54 @@ export function LiveBarGraphRealtime({
                     transition: "height 0.4s cubic-bezier(.2,.7,.2,1)",
                     minHeight: heightPct > 0 ? "2px" : "0",
                   }}
-                />
+                >
+                  {/* Percentage — sits inside the bar, near the top */}
+                  <div
+                    className="absolute left-0 right-0 text-center uppercase tabular-nums text-white"
+                    style={{
+                      top: `${1.2 * fontScale}vh`,
+                      fontFamily: HEAD_FONT,
+                      fontSize: `${4 * fontScale}vh`,
+                      fontWeight: 900,
+                      lineHeight: 1.1,
+                      letterSpacing: "-0.02em",
+                      textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                    }}
+                  >
+                    {Math.round(pct)}%
+                  </div>
+                </div>
               </div>
 
-              {/* Letter label — large and bold, primary visual anchor */}
+              {/* Letter label */}
               <div
+                className="uppercase text-left"
                 style={{
-                  fontFamily: "monospace",
-                  fontSize: `${4.2 * fontScale}vh`,
-                  fontWeight: 700,
+                  fontFamily: HEAD_FONT,
+                  fontSize: `${4.5 * fontScale}vh`,
+                  fontWeight: 900,
                   color: labelColor,
                   marginTop: `${1.2 * fontScale}vh`,
                   lineHeight: 1,
-                  letterSpacing: "0.02em",
+                  letterSpacing: "-0.01em",
                 }}
               >
                 {answer.label}
               </div>
 
-              {/* Option text — readable, multiline-safe */}
+              {/* Option text */}
               <div
-                className="text-white/90 text-center"
+                className="text-white uppercase text-left"
                 style={{
-                  fontFamily: "monospace",
-                  fontSize: `${2.6 * fontScale}vh`,
-                  fontWeight: 500,
-                  marginTop: `${0.8 * fontScale}vh`,
-                  lineHeight: 1.25,
+                  fontFamily: HEAD_FONT,
+                  fontSize: `${2.4 * fontScale}vh`,
+                  fontWeight: 900,
+                  marginTop: `${0.6 * fontScale}vh`,
+                  lineHeight: 1.15,
                   maxWidth: "100%",
                   overflowWrap: "break-word",
                   hyphens: "auto",
-                  letterSpacing: "0.01em",
+                  letterSpacing: "-0.005em",
                 }}
               >
                 {answer.text}
