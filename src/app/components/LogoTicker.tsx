@@ -15,27 +15,29 @@ const TICKER_ITEMS = [...LOGOS, ...LOGOS];
 
 export function LogoTicker(_props: Props) {
   return (
-    <div className="relative w-full h-full overflow-hidden bg-black">
+    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", background: "#000" }}>
       <div
-        className="absolute inset-0 flex"
-        style={{ maskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)" }}
+        style={{
+          position: "absolute", inset: 0,
+          display: "flex", alignItems: "stretch",
+          maskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)",
+        }}
       >
         <div
-          className="flex items-stretch ticker-scroll"
-          style={{ willChange: "transform", height: "100%" }}
+          className="ticker-scroll"
+          style={{ display: "flex", alignItems: "stretch", height: "100%", willChange: "transform" }}
         >
           {TICKER_ITEMS.map((logo, i) => (
-            <div key={i} className="flex items-stretch flex-shrink-0" style={{ padding: "0 40px" }}>
+            <div
+              key={i}
+              style={{ display: "flex", alignItems: "stretch", flexShrink: 0, padding: "0 40px", gap: 40 }}
+            >
               <img
                 src={logo.src}
                 alt={logo.alt}
-                className="flex-shrink-0"
-                style={{ height: "100%", width: "auto", objectFit: "contain", filter: "invert(1)", opacity: 0.92 }}
+                style={{ display: "block", height: "100%", width: "auto", flexShrink: 0, filter: "invert(1)", opacity: 0.92 }}
               />
-              <div
-                className="flex-shrink-0"
-                style={{ width: 1, background: "rgba(255,255,255,0.2)", marginLeft: 40 }}
-              />
+              <div style={{ width: 1, flexShrink: 0, background: "rgba(255,255,255,0.2)" }} />
             </div>
           ))}
         </div>
