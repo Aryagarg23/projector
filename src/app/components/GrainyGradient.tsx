@@ -135,7 +135,7 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
 
       // ── Iridescent mesh gradient background (p5 noise-field style) ─────────
       // Build from large overlapping radial blobs placed at noise-driven positions.
-      const blobCount = cfg.layers + 3;
+      const blobCount = cfg.layers + 10;
       for (let b = 0; b < blobCount; b++) {
         const phase = b * 2.39996; // golden angle spread
         const nx = Math.sin(time * 0.7 + phase) * 0.38 + 0.5;
@@ -160,7 +160,7 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
       }
 
       // Thin color-shift overlay driven by noise field — gives iridescent shimmer
-      const shimmerRes = 6;
+      const shimmerRes = 10;
       const tileW = w / shimmerRes;
       const tileH = h / shimmerRes;
       for (let gx2 = 0; gx2 < shimmerRes; gx2++) {
@@ -176,7 +176,7 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
       }
 
       // ── Ribbons ──────────────────────────────────────────────────────────────
-      const targetRibbons = Math.max(5, Math.round(cfg.particles * 0.3));
+      const targetRibbons = Math.max(12, Math.round(cfg.particles * 0.6));
       while (ribbons.length < targetRibbons)
         ribbons.push(makeRibbon(w, h, cfg.baseHue, ribbons.length));
       if (ribbons.length > targetRibbons) ribbons = ribbons.slice(0, targetRibbons);
