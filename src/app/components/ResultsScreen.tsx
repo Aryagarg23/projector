@@ -14,6 +14,22 @@ import {
   type MCQAnswer,
 } from "./slideConfig";
 import { useLivePoll } from "../lib/useLivePoll";
+import { supabase } from "../lib/supabase";
+
+// Question slides only (excludes welcome). Module-scope so the cycle effect
+// doesn't depend on a recreated array.
+const questionSlides = slides.filter((s) => s.bottom.showGraph);
+const qCount = questionSlides.length;
+
+interface PollVoteRow {
+  slide_id: string;
+  option_a: string;
+  option_b: string;
+  option_c: string | null;
+  option_d: string | null;
+  question: string;
+}
+interface CountsRow { poll_id: number; choice: "A" | "B" | "C" | "D"; votes: number }
 
 interface Point {
   x: number;
@@ -169,35 +185,108 @@ export function ResultsScreen() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const answers: MCQAnswer[] = useMemo(() => {
-    if (!poll) {
-      return [
-        { label: "A", text: "—", votes: 0 },
-        { label: "B", text: "—", votes: 0 },
-        { label: "C", text: "—", votes: 0 },
-        { label: "D", text: "—", votes: 0 },
-      ];
-    }
-    return [
-      { label: "A", text: poll.option_a, votes: counts.A },
-      { label: "B", text: poll.option_b, votes: counts.B },
-      { label: "C", text: poll.option_c, votes: counts.C },
-      { label: "D", text: poll.option_d, votes: counts.D },
-    ];
-  }, [poll, counts]);
-
-  const baseSlide = slideFor(poll?.slide_id);
-  const liveSlide: SlideConfig = useMemo(
-    () => ({
-      ...baseSlide,
-      bottom: {
-        ...baseSlide.bottom,
-        heroText: poll?.question ?? "WAITING FOR POLL",
-        showGraph: !!poll,
-      },
-    }),
-    [baseSlide, poll]
+  // Index of the active poll within questionSlides — the one we should NOT show.
+  const livePollIdx = useMemo(
+    () => (poll ? questionSlides.findIndex((s) => s.id === poll.slide_id) : -1),
+    [poll?.slide_id]
   );
+
+  // Which question's results to display. Always avoids livePollIdx so voters
+  // on answer-here can't peek at the live tally for what they're voting on.
+  const [displayedQIdx, setDisplayedQIdx] = useState(0);
+
+  // When the active poll changes, ensure displayedQIdx isn't on the active one.
+  useEffect(() => {
+    if (livePollIdx < 0 || qCount === 0) return;
+    setDisplayedQIdx((prev) => {
+      if (prev !== livePollIdx) return prev;
+      return (livePollIdx + 1) % qCount;
+    });
+  }, [livePollIdx]);
+
+  // Cycle displayed graph every 45s, skipping the active poll's index.
+  useEffect(() => {
+    if (qCount === 0) return;
+    const timer = setInterval(() => {
+      setDisplayedQIdx((prev) => {
+        let next = (prev + 1) % qCount;
+        if (next === livePollIdx) next = (next + 1) % qCount;
+        return next;
+      });
+    }, 45000);
+    return () => clearInterval(timer);
+  }, [livePollIdx]);
+
+  // Fetch counts for ALL polls (not just the active one) so the displayed
+  // question's graph reflects its real tally.
+  const [pollsBySlide, setPollsBySlide] = useState<Record<string, { id: number; row: PollVoteRow }>>({});
+  const [countsByPollId, setCountsByPollId] = useState<Record<number, { A: number; B: number; C: number; D: number }>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchAll() {
+      const { data: pollRows } = await supabase
+        .from("polls")
+        .select("id, slide_id, option_a, option_b, option_c, option_d, question");
+      const { data: countRows } = await supabase
+        .from("vote_counts")
+        .select("poll_id, choice, votes");
+      if (cancelled) return;
+      if (pollRows) {
+        const map: Record<string, { id: number; row: PollVoteRow }> = {};
+        for (const p of pollRows as (PollVoteRow & { id: number })[]) {
+          map[p.slide_id] = { id: p.id, row: p };
+        }
+        setPollsBySlide(map);
+      }
+      if (countRows) {
+        const map: Record<number, { A: number; B: number; C: number; D: number }> = {};
+        for (const r of countRows as CountsRow[]) {
+          if (!map[r.poll_id]) map[r.poll_id] = { A: 0, B: 0, C: 0, D: 0 };
+          map[r.poll_id][r.choice] = r.votes;
+        }
+        setCountsByPollId(map);
+      }
+    }
+    fetchAll();
+    const ch = supabase
+      .channel("results_all_votes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "votes" }, () => fetchAll())
+      .subscribe();
+    const tick = setInterval(fetchAll, 2000);
+    return () => {
+      cancelled = true;
+      clearInterval(tick);
+      supabase.removeChannel(ch);
+    };
+  }, []);
+
+  // Resolve the slide + answers for the displayed (non-active) question.
+  const displaySlide: SlideConfig = useMemo(() => {
+    const slide = questionSlides[displayedQIdx] ?? questionSlides[0] ?? slides[0];
+    const dbPoll = pollsBySlide[slide.id]?.row;
+    return {
+      ...slide,
+      bottom: {
+        ...slide.bottom,
+        heroText: dbPoll?.question ?? slide.bottom.heroText,
+        showGraph: true,
+      },
+    };
+  }, [displayedQIdx, pollsBySlide]);
+
+  const answers: MCQAnswer[] = useMemo(() => {
+    const slide = questionSlides[displayedQIdx] ?? questionSlides[0];
+    const entry = pollsBySlide[slide?.id];
+    const cnt = entry ? countsByPollId[entry.id] : undefined;
+    const row = entry?.row;
+    return [
+      { label: "A", text: row?.option_a ?? "—", votes: cnt?.A ?? 0 },
+      { label: "B", text: row?.option_b ?? "—", votes: cnt?.B ?? 0 },
+      { label: "C", text: row?.option_c ?? "—", votes: cnt?.C ?? 0 },
+      { label: "D", text: row?.option_d ?? "—", votes: cnt?.D ?? 0 },
+    ];
+  }, [displayedQIdx, pollsBySlide, countsByPollId]);
 
   return (
     <div className="w-screen h-screen bg-black flex flex-col overflow-hidden select-none">
@@ -211,7 +300,7 @@ export function ResultsScreen() {
           onCornersChange={handleTopCornersChange}
           onSizeChange={handleTopSize}
         >
-          <LiveTopSurface slide={liveSlide} tickerSpeed={tickerSpeedLive} />
+          <LiveTopSurface slide={displaySlide} tickerSpeed={tickerSpeedLive} />
         </PerspectivePanel>
       </div>
 
@@ -226,7 +315,7 @@ export function ResultsScreen() {
           onSizeChange={handleBottomSize}
         >
           <LiveBottomSurface
-            slide={liveSlide}
+            slide={displaySlide}
             answers={answers}
             ribbonCount={ribbonCountLive}
             ribbonSpeed={ribbonSpeedLive}
