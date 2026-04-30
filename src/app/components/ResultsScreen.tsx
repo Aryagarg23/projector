@@ -262,18 +262,18 @@ export function ResultsScreen() {
   }, []);
 
   // Resolve the slide + answers for the displayed (non-active) question.
+  // heroText comes straight from slideConfig (frontend-controlled framing) —
+  // we don't override from DB so the question text formatting stays consistent.
   const displaySlide: SlideConfig = useMemo(() => {
     const slide = questionSlides[displayedQIdx] ?? questionSlides[0] ?? slides[0];
-    const dbPoll = pollsBySlide[slide.id]?.row;
     return {
       ...slide,
       bottom: {
         ...slide.bottom,
-        heroText: dbPoll?.question ?? slide.bottom.heroText,
         showGraph: true,
       },
     };
-  }, [displayedQIdx, pollsBySlide]);
+  }, [displayedQIdx]);
 
   const answers: MCQAnswer[] = useMemo(() => {
     const slide = questionSlides[displayedQIdx] ?? questionSlides[0];

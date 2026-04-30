@@ -72,7 +72,7 @@ export default function App() {
       ...base,
       bottom: {
         ...base.bottom,
-        heroText: livePoll.question,
+        // heroText stays from slideConfig (frontend-controlled framing).
         answers: liveAnswers,
       },
     };
