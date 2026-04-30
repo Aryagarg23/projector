@@ -11,7 +11,7 @@ const LOGOS = [
   { src: "/logos/foresight_lab.svg", alt: "Foresight Lab" },
 ];
 
-const TICKER_ITEMS = [...LOGOS, ...LOGOS];
+const TICKER_ITEMS = [...LOGOS, ...LOGOS, ...LOGOS, ...LOGOS];
 
 export function LogoTicker(_props: Props) {
   return (
@@ -25,7 +25,7 @@ export function LogoTicker(_props: Props) {
       >
         <div
           className="ticker-scroll"
-          style={{ display: "flex", alignItems: "stretch", height: "100%", willChange: "transform" }}
+          style={{ display: "flex", alignItems: "stretch", height: "100%", willChange: "transform", animationDelay: "-9s" }}
         >
           {TICKER_ITEMS.map((logo, i) => (
             <div
