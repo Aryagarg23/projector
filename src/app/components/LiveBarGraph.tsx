@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import type { MCQAnswer } from "./slideConfig";
 
 interface Props {
@@ -16,39 +15,8 @@ export function LiveBarGraph({
   accentHue = 180,
   fontScale = 1,
 }: Props) {
-  const votesRef = useRef<number[]>(answers.map((a) => a.votes));
-  const targetRef = useRef<number[]>(answers.map((a) => a.votes));
-  const [displayed, setDisplayed] = useState<number[]>(() => answers.map((a) => a.votes));
-
-  useEffect(() => {
-    votesRef.current = answers.map((a) => a.votes);
-    targetRef.current = answers.map((a) => a.votes);
-    setDisplayed(answers.map((a) => a.votes));
-  }, [answers]);
-
-  useEffect(() => {
-    let raf = 0;
-    let walkTimer = 0;
-    const tick = (now: number) => {
-      if (now - walkTimer > 600) {
-        walkTimer = now;
-        const v = votesRef.current;
-        for (let i = 0; i < v.length; i++) {
-          v[i] = Math.max(0, v[i] + (Math.random() - 0.4) * 1.5);
-        }
-        targetRef.current = [...v];
-      }
-      setDisplayed((prev) =>
-        prev.map((p, i) => p + ((targetRef.current[i] ?? 0) - p) * 0.08)
-      );
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  const total = displayed.reduce((s, v) => s + v, 0);
-  const maxVotes = Math.max(1, ...displayed);
+  const total = answers.reduce((s, a) => s + a.votes, 0);
+  const maxVotes = Math.max(1, ...answers.map((a) => a.votes));
   const cols = answers.length;
 
   return (
@@ -69,10 +37,8 @@ export function LiveBarGraph({
           height: "100%",
         }}
       >
-        {/* Row 1 — percentages */}
         {answers.map((answer, i) => {
-          const displayVotes = displayed[i] ?? 0;
-          const pct = total > 0 ? (displayVotes / total) * 100 : 0;
+          const pct = total > 0 ? (answer.votes / total) * 100 : 0;
           return (
             <div
               key={`pct-${answer.label}`}
@@ -93,10 +59,8 @@ export function LiveBarGraph({
           );
         })}
 
-        {/* Row 2 — bars */}
         {answers.map((answer, i) => {
-          const displayVotes = displayed[i] ?? 0;
-          const heightPct = (displayVotes / maxVotes) * 100;
+          const heightPct = (answer.votes / maxVotes) * 100;
           const hue = (accentHue + i * 25) % 360;
           const barColorTop = `hsl(${hue}, 80%, 62%)`;
           const barColorBot = `hsl(${hue}, 70%, 38%)`;
@@ -125,7 +89,6 @@ export function LiveBarGraph({
           );
         })}
 
-        {/* Row 3 — letters */}
         {answers.map((answer, i) => {
           const hue = (accentHue + i * 25) % 360;
           const labelColor = `hsl(${hue}, 80%, 72%)`;
@@ -150,7 +113,6 @@ export function LiveBarGraph({
           );
         })}
 
-        {/* Row 4 — option text */}
         {answers.map((answer, i) => (
           <div
             key={`text-${answer.label}`}

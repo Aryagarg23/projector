@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import type { MCQAnswer } from "./slideConfig";
 
 interface Props {
@@ -11,7 +10,7 @@ interface Props {
 const HEAD_FONT = "'Archivo Black', 'Archivo', system-ui, sans-serif";
 
 // Minimum visible bar height (in vh) so the chart still reads as a chart
-// even when all votes are 0. Real values scale proportionally above this floor.
+// even when all votes are 0.
 const BAR_MIN_VH = 6;
 
 export function LiveBarGraphRealtime({
@@ -19,30 +18,11 @@ export function LiveBarGraphRealtime({
   accentHue = 180,
   fontScale = 1,
 }: Props) {
+  // Render directly from the live `answers` prop — CSS handles bar-height
+  // smoothing via the transition rule below. No internal state, no rAF, so
+  // there's no length-mismatch bug when answers populate after initial render.
   const total = answers.reduce((s, a) => s + a.votes, 0);
   const maxVotes = Math.max(1, ...answers.map((a) => a.votes));
-
-  const [displayed, setDisplayed] = useState<number[]>(() => answers.map((a) => a.votes));
-  const targetRef = useRef<number[]>(answers.map((a) => a.votes));
-  targetRef.current = answers.map((a) => a.votes);
-
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      setDisplayed((prev) => {
-        const next = prev.map((v, i) => {
-          const t = targetRef.current[i] ?? 0;
-          return v + (t - v) * 0.12;
-        });
-        const settled = next.every((v, i) => Math.abs((targetRef.current[i] ?? 0) - v) < 0.05);
-        if (!settled) raf = requestAnimationFrame(tick);
-        return next;
-      });
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [answers]);
-
   const cols = answers.length;
 
   return (
@@ -68,10 +48,9 @@ export function LiveBarGraphRealtime({
           height: "100%",
         }}
       >
-        {/* ─── ROW 1 — Percentage labels (primary data, biggest type) ─── */}
+        {/* Row 1 — subtle percentage labels */}
         {answers.map((answer, i) => {
-          const displayVotes = displayed[i] ?? 0;
-          const pct = total > 0 ? (displayVotes / total) * 100 : 0;
+          const pct = total > 0 ? (answer.votes / total) * 100 : 0;
           return (
             <div
               key={`pct-${answer.label}`}
@@ -92,10 +71,9 @@ export function LiveBarGraphRealtime({
           );
         })}
 
-        {/* ─── ROW 2 — Bars (always visible via min-height floor) ─── */}
+        {/* Row 2 — bars (CSS transition smooths the height changes) */}
         {answers.map((answer, i) => {
-          const displayVotes = displayed[i] ?? 0;
-          const heightPct = (displayVotes / maxVotes) * 100;
+          const heightPct = (answer.votes / maxVotes) * 100;
           const hue = (accentHue + i * 25) % 360;
           const barColorTop = `hsl(${hue}, 80%, 62%)`;
           const barColorBot = `hsl(${hue}, 70%, 38%)`;
@@ -124,7 +102,7 @@ export function LiveBarGraphRealtime({
           );
         })}
 
-        {/* ─── ROW 3 — Letter labels (accent-tinted anchor) ─── */}
+        {/* Row 3 — letter labels */}
         {answers.map((answer, i) => {
           const hue = (accentHue + i * 25) % 360;
           const labelColor = `hsl(${hue}, 80%, 72%)`;
@@ -149,7 +127,7 @@ export function LiveBarGraphRealtime({
           );
         })}
 
-        {/* ─── ROW 4 — Option text (auto row stretches to tallest item) ─── */}
+        {/* Row 4 — option text (auto row stretches to tallest item) */}
         {answers.map((answer, i) => (
           <div
             key={`text-${answer.label}`}

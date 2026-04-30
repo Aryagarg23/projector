@@ -238,6 +238,25 @@ export function ResultsScreen() {
     );
   }, [displayedQIdx, pollsBySlide, countsByPollId]);
 
+  // Expose runtime state on window for fast debugging from DevTools console.
+  // Type `__resultsDebug()` in DevTools to dump the current view state.
+  useEffect(() => {
+    (window as unknown as { __resultsDebug: () => unknown }).__resultsDebug = () => {
+      const dump = {
+        activePollSlideId: poll?.slide_id ?? null,
+        livePollIdx,
+        displayedQIdx,
+        displayedSlideId: questionSlides[displayedQIdx]?.id ?? null,
+        pollsBySlide,
+        countsByPollId,
+        answers,
+      };
+      // eslint-disable-next-line no-console
+      console.log("[results-here debug]", dump);
+      return dump;
+    };
+  }, [poll, livePollIdx, displayedQIdx, pollsBySlide, countsByPollId, answers]);
+
   return (
     <div className="w-screen h-screen bg-black flex flex-col overflow-hidden select-none">
       {/* Top surface — 20vh */}
