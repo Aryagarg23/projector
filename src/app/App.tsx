@@ -5,6 +5,7 @@ import { TopSurface } from "./components/TopSurface";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { slides, defaultRenderSettings, defaultCornerInset } from "./components/slideConfig";
 import { useLivePoll } from "./lib/useLivePoll";
+import { useAllPollCounts } from "./lib/useAllPollCounts";
 
 interface Point {
   x: number;
@@ -53,18 +54,22 @@ export default function App() {
 
   const baseSlide = slides[slideIndex];
   const { poll: livePoll, counts: liveCounts } = useLivePoll();
+  const { pollsBySlide, countsByPollId } = useAllPollCounts();
 
-  // The slide whose graph/answers we display in the bottom surface
+  // The slide whose graph/answers we display in the bottom surface.
+  // Always pulls real Supabase counts via pollsBySlide/countsByPollId, with
+  // useLivePoll's faster live-counts override when displaying the active poll.
   const graphSlide = (() => {
     const base = questionSlides[graphQIdx % Math.max(1, qCount)] ?? questionSlides[0] ?? baseSlide;
-    if (!livePoll) return base;
-    // If live poll matches the graph slide, inject live counts
-    if (livePoll.slide_id !== base.id) return base;
-    const liveAnswers = [
-      { label: "A", text: livePoll.option_a, votes: liveCounts.A },
-      { label: "B", text: livePoll.option_b, votes: liveCounts.B },
-      { label: "C", text: livePoll.option_c, votes: liveCounts.C },
-      { label: "D", text: livePoll.option_d, votes: liveCounts.D },
+    const dbPoll = pollsBySlide[base.id];
+    if (!dbPoll) return base; // fall back to slideConfig if DB hasn't loaded
+    const isActive = livePoll?.slide_id === base.id;
+    const cnt = countsByPollId[dbPoll.id];
+    const answers = [
+      { label: "A", text: dbPoll.option_a, votes: isActive ? liveCounts.A : (cnt?.A ?? 0) },
+      { label: "B", text: dbPoll.option_b, votes: isActive ? liveCounts.B : (cnt?.B ?? 0) },
+      { label: "C", text: dbPoll.option_c, votes: isActive ? liveCounts.C : (cnt?.C ?? 0) },
+      { label: "D", text: dbPoll.option_d, votes: isActive ? liveCounts.D : (cnt?.D ?? 0) },
     ].filter((a): a is { label: string; text: string; votes: number } =>
       a.text != null && a.text !== ""
     );
@@ -73,7 +78,7 @@ export default function App() {
       bottom: {
         ...base.bottom,
         // heroText stays from slideConfig (frontend-controlled framing).
-        answers: liveAnswers,
+        answers,
       },
     };
   })();

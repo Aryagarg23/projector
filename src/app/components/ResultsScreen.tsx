@@ -14,22 +14,12 @@ import {
   type MCQAnswer,
 } from "./slideConfig";
 import { useLivePoll } from "../lib/useLivePoll";
-import { supabase } from "../lib/supabase";
+import { useAllPollCounts } from "../lib/useAllPollCounts";
 
 // Question slides only (excludes welcome). Module-scope so the cycle effect
 // doesn't depend on a recreated array.
 const questionSlides = slides.filter((s) => s.bottom.showGraph);
 const qCount = questionSlides.length;
-
-interface PollVoteRow {
-  slide_id: string;
-  option_a: string;
-  option_b: string;
-  option_c: string | null;
-  option_d: string | null;
-  question: string;
-}
-interface CountsRow { poll_id: number; choice: "A" | "B" | "C" | "D"; votes: number }
 
 interface Point {
   x: number;
@@ -46,10 +36,6 @@ function makeDefaultCorners(w: number, h: number): Quad {
     { x: w - ix, y: h - iy },
     { x: ix, y: h - iy },
   ];
-}
-
-function slideFor(slideId: string | undefined): SlideConfig {
-  return slides.find((s) => s.id === slideId) ?? slides[1];
 }
 
 // Mirrors the projector's BottomSurface but driven by live answers.
@@ -105,7 +91,9 @@ function LiveTopSurface({ slide, tickerSpeed }: { slide: SlideConfig; tickerSpee
 }
 
 export function ResultsScreen() {
-  const { poll, counts } = useLivePoll();
+  // We only need `poll` (the active poll) so we can avoid showing its tally.
+  // Counts for ALL polls are fetched separately below via fetchAll().
+  const { poll } = useLivePoll();
 
   const [guideUIVisible, setGuideUIVisible] = useState(false);
 
@@ -217,49 +205,9 @@ export function ResultsScreen() {
     return () => clearInterval(timer);
   }, [livePollIdx]);
 
-  // Fetch counts for ALL polls (not just the active one) so the displayed
-  // question's graph reflects its real tally.
-  const [pollsBySlide, setPollsBySlide] = useState<Record<string, { id: number; row: PollVoteRow }>>({});
-  const [countsByPollId, setCountsByPollId] = useState<Record<number, { A: number; B: number; C: number; D: number }>>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchAll() {
-      const { data: pollRows } = await supabase
-        .from("polls")
-        .select("id, slide_id, option_a, option_b, option_c, option_d, question");
-      const { data: countRows } = await supabase
-        .from("vote_counts")
-        .select("poll_id, choice, votes");
-      if (cancelled) return;
-      if (pollRows) {
-        const map: Record<string, { id: number; row: PollVoteRow }> = {};
-        for (const p of pollRows as (PollVoteRow & { id: number })[]) {
-          map[p.slide_id] = { id: p.id, row: p };
-        }
-        setPollsBySlide(map);
-      }
-      if (countRows) {
-        const map: Record<number, { A: number; B: number; C: number; D: number }> = {};
-        for (const r of countRows as CountsRow[]) {
-          if (!map[r.poll_id]) map[r.poll_id] = { A: 0, B: 0, C: 0, D: 0 };
-          map[r.poll_id][r.choice] = r.votes;
-        }
-        setCountsByPollId(map);
-      }
-    }
-    fetchAll();
-    const ch = supabase
-      .channel("results_all_votes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "votes" }, () => fetchAll())
-      .subscribe();
-    const tick = setInterval(fetchAll, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(tick);
-      supabase.removeChannel(ch);
-    };
-  }, []);
+  // Fetch counts for ALL polls — the displayed (non-active) question's graph
+  // pulls its real tally from this map.
+  const { pollsBySlide, countsByPollId } = useAllPollCounts();
 
   // Resolve the slide + answers for the displayed (non-active) question.
   // heroText comes straight from slideConfig (frontend-controlled framing) —
@@ -277,19 +225,18 @@ export function ResultsScreen() {
 
   const answers: MCQAnswer[] = useMemo(() => {
     const slide = questionSlides[displayedQIdx] ?? questionSlides[0];
-    const entry = pollsBySlide[slide?.id];
-    const cnt = entry ? countsByPollId[entry.id] : undefined;
-    const row = entry?.row;
+    const row = pollsBySlide[slide?.id];
+    const cnt = row ? countsByPollId[row.id] : undefined;
     const raw = [
       { label: "A", text: row?.option_a, votes: cnt?.A ?? 0 },
       { label: "B", text: row?.option_b, votes: cnt?.B ?? 0 },
       { label: "C", text: row?.option_c, votes: cnt?.C ?? 0 },
       { label: "D", text: row?.option_d, votes: cnt?.D ?? 0 },
     ];
-    return raw
-      .filter((a): a is { label: string; text: string; votes: number } =>
+    return raw.filter(
+      (a): a is { label: string; text: string; votes: number } =>
         a.text != null && a.text !== ""
-      );
+    );
   }, [displayedQIdx, pollsBySlide, countsByPollId]);
 
   return (
