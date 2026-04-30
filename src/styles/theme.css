@@ -119,13 +119,13 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@keyframes ticker-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-25%); }
+@keyframes ticker-scroll-px {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(calc(-1 * var(--ticker-distance, 0px)), 0, 0); }
 }
 
-.ticker-scroll {
-  animation: ticker-scroll var(--ticker-speed, 18s) linear infinite;
+.ticker-scroll-px {
+  animation: ticker-scroll-px var(--ticker-speed, 18s) linear infinite;
 }
 
 @layer base {

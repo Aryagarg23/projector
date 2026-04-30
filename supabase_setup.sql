@@ -15,8 +15,8 @@ create table public.polls (
   question     text not null,
   option_a     text not null,
   option_b     text not null,
-  option_c     text not null,
-  option_d     text not null,
+  option_c     text,                           -- nullable: some questions have <4 options
+  option_d     text,
   position     int  not null default 0,        -- display order
   created_at   timestamptz not null default now()
 );
@@ -81,16 +81,33 @@ alter publication supabase_realtime add table public.poll_state;
 
 -- ============================================================
 -- SEED: the 4 questions from slideConfig.ts
+-- Each question asks: which sub-driver will most shape this driver's future?
 -- ============================================================
 insert into public.polls (slide_id, question, option_a, option_b, option_c, option_d, position) values
-  ('q1', 'Question about New American Dream',
-         'Option A', 'Option B', 'Option C', 'Option D', 1),
-  ('q2', 'Question about Lifemaxxing',
-         'Option A', 'Option B', 'Option C', 'Option D', 2),
-  ('q3', 'Question about Techno Social Tug of War',
-         'Option A', 'Option B', 'Option C', 'Option D', 3),
-  ('q4', 'Question about Non Invasive Age',
-         'Option A', 'Option B', 'Option C', 'Option D', 4)
+  ('q1', 'NEW AMERICAN DREAM',
+         'Family 2.0',
+         'Home Ownership: The Impossible Dream',
+         'Buy Now, Pay Forever',
+         'Alternative Investments',
+         1),
+  ('q2', 'LIFEMAXXING',
+         'Gen Alpha Alphas',
+         'The Quest for Immortality',
+         'Effortless Enhancement',
+         'The Status of Wellness',
+         2),
+  ('q3', 'THE NON-INVASIVE AGE',
+         'Upgrades Available',
+         'Needles Not Required',
+         'Transmission Received',
+         null,
+         3),
+  ('q4', 'TECHNO-SOCIAL TUG-OF-WAR',
+         'Just Chat It',
+         'Your AI Frenemy',
+         'Data as a Currency',
+         'Big Tech, Bigger Influence',
+         4)
 on conflict (slide_id) do update set
   question = excluded.question,
   option_a = excluded.option_a,

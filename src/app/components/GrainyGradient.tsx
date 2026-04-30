@@ -54,6 +54,25 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
     let running = true;
     let time = 0;
 
+    // ── Pre-bake a noise tile once (way cheaper than per-frame ImageData) ───
+    if (!grainTileRef.current) {
+      const TILE = 256;
+      const tile = document.createElement("canvas");
+      tile.width = TILE;
+      tile.height = TILE;
+      const tctx = tile.getContext("2d");
+      if (tctx) {
+        const img = tctx.createImageData(TILE, TILE);
+        const d = img.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const n = (Math.random() * 255) | 0;
+          d[i] = n; d[i + 1] = n; d[i + 2] = n; d[i + 3] = 255;
+        }
+        tctx.putImageData(img, 0, 0);
+      }
+      grainTileRef.current = tile;
+    }
+
     // ── Flowing ribbons (kept from before) ──────────────────────────────────
     interface TrailPoint { x: number; y: number }
     interface Ribbon {
@@ -292,20 +311,20 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
 
       ctx.restore();
 
-      // ── Grain overlay ────────────────────────────────────────────────────────
+      // ── Grain overlay (pre-baked tile, stamped via drawImage) ───────────────
       const grainAmt = cfg.grainIntensity;
-      if (grainAmt > 0) {
-        const imageData = ctx.getImageData(0, 0, cw, ch);
-        const data = imageData.data;
-        const strength = grainAmt * 0.8;
-        const step = w > 800 ? 8 : 4;
-        for (let i = 0; i < data.length; i += step) {
-          const noise = (Math.random() - 0.5) * strength;
-          data[i] += noise;
-          data[i + 1] += noise;
-          data[i + 2] += noise;
+      if (grainAmt > 0 && grainTileRef.current) {
+        const tile = grainTileRef.current;
+        ctx.save();
+        ctx.globalAlpha = Math.min(0.35, grainAmt / 100);
+        ctx.globalCompositeOperation = "overlay";
+        // Tile the noise across the full canvas
+        for (let y = 0; y < ch; y += tile.height) {
+          for (let x = 0; x < cw; x += tile.width) {
+            ctx.drawImage(tile, x, y);
+          }
         }
-        ctx.putImageData(imageData, 0, 0);
+        ctx.restore();
       }
 
       frameRef.current = requestAnimationFrame(animate);
