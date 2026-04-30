@@ -166,21 +166,27 @@ export function PerspectivePanel({ id, label, children, guideUIVisible = true, c
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
-      {/* Transformed content */}
-      <div
-        className="absolute inset-0"
-        style={{
-          transformOrigin: "0 0",
-          transform,
-          willChange: "transform",
-        }}
-      >
-        <div className="w-full h-full bg-black/80 flex items-center justify-center">
+      {/* Transformed content — rendered at the natural container size so
+          content layout/aspect ratios are always correct, then warped */}
+      {size.w > 0 && size.h > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: size.w,
+            height: size.h,
+            transformOrigin: "0 0",
+            transform,
+            willChange: "transform",
+            overflow: "hidden",
+          }}
+        >
           {children || (
             <span className="text-white/50 text-lg select-none">{label}</span>
           )}
         </div>
-      </div>
+      )}
 
       {/* Corner drag handles */}
       {guideUIVisible &&
