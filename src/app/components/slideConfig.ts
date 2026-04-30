@@ -71,6 +71,33 @@ export const renderSliderRanges = {
     max: 60,
     step: 0.5,
   },
+  ribbonCount: {
+    min: 0,
+    max: 200,
+    step: 1,
+  },
+  ribbonSpeed: {
+    min: 0.1,
+    max: 4,
+    step: 0.05,
+  },
+  rippleCount: {
+    min: 0,
+    max: 60,
+    step: 1,
+  },
+  rippleSpeed: {
+    min: 0.1,
+    max: 5,
+    step: 0.05,
+  },
+};
+
+export const defaultBgSettings = {
+  ribbonCount: 30,
+  ribbonSpeed: 1,
+  rippleCount: 8,
+  rippleSpeed: 1,
 };
 
 // ============================================================

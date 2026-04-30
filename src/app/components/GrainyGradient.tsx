@@ -4,6 +4,14 @@ import type { GradientConfig } from "./slideConfig";
 interface Props {
   config: GradientConfig;
   dpiScale?: number;
+  /** Override the ribbon ("orb") count (otherwise derived from config.particles) */
+  ribbonCount?: number;
+  /** Multiplier on ribbon physics speed (default 1) */
+  ribbonSpeed?: number;
+  /** Override the max ripple count (otherwise derived from config.particles) */
+  rippleCount?: number;
+  /** Multiplier on ripple spawn rate (default 1) */
+  rippleSpeed?: number;
 }
 
 // Smooth noise via value noise (p5.js-style simplex approximation using
@@ -37,13 +45,28 @@ function meshSat(baseSat: number, nx: number, ny: number, t: number): number {
   return Math.min(95, Math.max(40, baseSat + n * 18));
 }
 
-export function GrainyGradient({ config, dpiScale = 1 }: Props) {
+export function GrainyGradient({
+  config,
+  dpiScale = 1,
+  ribbonCount,
+  ribbonSpeed = 1,
+  rippleCount,
+  rippleSpeed = 1,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<number>(0);
   const configRef = useRef(config);
   configRef.current = config;
   const dpiRef = useRef(dpiScale);
   dpiRef.current = dpiScale;
+  const ribbonCountRef = useRef(ribbonCount);
+  ribbonCountRef.current = ribbonCount;
+  const ribbonSpeedRef = useRef(ribbonSpeed);
+  ribbonSpeedRef.current = ribbonSpeed;
+  const rippleCountRef = useRef(rippleCount);
+  rippleCountRef.current = rippleCount;
+  const rippleSpeedRef = useRef(rippleSpeed);
+  rippleSpeedRef.current = rippleSpeed;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,9 +137,31 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
       };
     }
 
+    // Smoothed config — lerps toward the live target each frame so transitions
+    // between slides don't snap.
+    const smooth: GradientConfig = { ...configRef.current };
+
+    // Shortest-arc lerp for hue (handles 0/360 wrap)
+    const lerpHue = (a: number, b: number, t: number) => {
+      let diff = ((b - a + 540) % 360) - 180;
+      return (a + diff * t + 360) % 360;
+    };
+    const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
     const animate = () => {
       if (!running) return;
-      const cfg = configRef.current;
+      const target = configRef.current;
+      // Lerp factor — ~0.04 per frame ≈ ~0.5–1s settle time at 60fps
+      const k = 0.04;
+      smooth.baseHue = lerpHue(smooth.baseHue, target.baseHue, k);
+      smooth.saturation = lerp(smooth.saturation, target.saturation, k);
+      smooth.lightness = lerp(smooth.lightness, target.lightness, k);
+      smooth.animSpeed = lerp(smooth.animSpeed, target.animSpeed, k);
+      smooth.layers = lerp(smooth.layers, target.layers, k);
+      smooth.particles = lerp(smooth.particles, target.particles, k);
+      smooth.grainIntensity = lerp(smooth.grainIntensity, target.grainIntensity, k);
+      smooth.hueSpeed = lerp(smooth.hueSpeed, target.hueSpeed, k);
+      const cfg = smooth;
       time += cfg.animSpeed;
       const { width: cw, height: ch } = canvas;
       const dpr = dpiRef.current;
@@ -176,10 +221,15 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
       }
 
       // ── Ribbons ──────────────────────────────────────────────────────────────
-      const targetRibbons = Math.max(12, Math.round(cfg.particles * 0.6));
+      const ribbonCountOverride = ribbonCountRef.current;
+      const targetRibbons = ribbonCountOverride !== undefined
+        ? Math.max(0, Math.round(ribbonCountOverride))
+        : Math.max(12, Math.round(cfg.particles * 0.6));
       while (ribbons.length < targetRibbons)
         ribbons.push(makeRibbon(w, h, cfg.baseHue, ribbons.length));
       if (ribbons.length > targetRibbons) ribbons = ribbons.slice(0, targetRibbons);
+
+      const ribbonSpeedMul = ribbonSpeedRef.current;
 
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
@@ -192,7 +242,7 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
         r.vx += Math.cos(angle) * 0.2;
         r.vy += Math.sin(angle) * 0.2;
         r.vx *= 0.93; r.vy *= 0.93;
-        r.x += r.vx; r.y += r.vy;
+        r.x += r.vx * ribbonSpeedMul; r.y += r.vy * ribbonSpeedMul;
         r.life++;
         r.points.push({ x: r.x, y: r.y });
         if (r.points.length > r.maxPoints) r.points.shift();
@@ -232,14 +282,18 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
       }
 
       // ── Droplet ripples ──────────────────────────────────────────────────────
-      // Spawn rate scales with animSpeed
-      const rippleInterval = Math.max(18, Math.round(120 / (cfg.animSpeed * 300 + 1)));
+      // Spawn rate scales with animSpeed and the rippleSpeed multiplier
+      const rippleSpeedMul = rippleSpeedRef.current;
+      const rippleInterval = Math.max(18, Math.round(120 / (cfg.animSpeed * 300 + 1) / rippleSpeedMul));
       if (time * (1 / cfg.animSpeed) > nextRipple) {
         nextRipple = time * (1 / cfg.animSpeed) + rippleInterval;
         ripples.push(makeRipple(w, h, cfg.baseHue));
       }
 
-      const maxRipples = Math.max(4, Math.round(cfg.particles * 0.15));
+      const rippleCountOverride = rippleCountRef.current;
+      const maxRipples = rippleCountOverride !== undefined
+        ? Math.max(0, Math.round(rippleCountOverride))
+        : Math.max(4, Math.round(cfg.particles * 0.15));
       if (ripples.length > maxRipples) ripples = ripples.slice(-maxRipples);
 
       for (let i = ripples.length - 1; i >= 0; i--) {

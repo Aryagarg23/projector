@@ -97,16 +97,28 @@ export default function App() {
     setSlideIndex((i) => (i - 1 + slides.length) % slides.length);
   }, []);
 
-  // Auto-cycle graph every 45s independently of question slide.
-  // Pauses while a live poll is active (vote just came in).
+  // Auto-cycle graph every 45s. The timer always runs; vote arrivals reset it.
+  const [cycleResetKey, setCycleResetKey] = useState(0);
   useEffect(() => {
-    if (livePoll) return;
     if (qCount === 0) return;
     const timer = setInterval(() => {
       setGraphQIdx((i) => (i + 1) % qCount);
     }, 45000);
     return () => clearInterval(timer);
-  }, [livePoll]);
+  }, [qCount, cycleResetKey]);
+
+  // When a vote arrives (counts total increases), jump graph to live poll's question
+  // and restart the 45s timer.
+  const lastTotalRef = useRef(0);
+  useEffect(() => {
+    const total = liveCounts.A + liveCounts.B + liveCounts.C + liveCounts.D;
+    if (total > lastTotalRef.current && livePoll) {
+      const idx = questionSlides.findIndex((s) => s.id === livePoll.slide_id);
+      if (idx >= 0) setGraphQIdx(idx);
+      setCycleResetKey((k) => k + 1);
+    }
+    lastTotalRef.current = total;
+  }, [liveCounts, livePoll]);
 
   // Initialize corners when sizes are known
   const handleTopSize = useCallback((w: number, h: number) => {

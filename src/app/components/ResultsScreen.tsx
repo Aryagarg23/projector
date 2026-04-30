@@ -8,6 +8,7 @@ import {
   slides,
   defaultCornerInset,
   defaultRenderSettings,
+  defaultBgSettings,
   renderSliderRanges,
   type SlideConfig,
   type MCQAnswer,
@@ -39,13 +40,28 @@ function slideFor(slideId: string | undefined): SlideConfig {
 function LiveBottomSurface({
   slide,
   answers,
+  ribbonCount,
+  ribbonSpeed,
+  rippleCount,
+  rippleSpeed,
 }: {
   slide: SlideConfig;
   answers: MCQAnswer[];
+  ribbonCount: number;
+  ribbonSpeed: number;
+  rippleCount: number;
+  rippleSpeed: number;
 }) {
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <GrainyGradient config={slide.bottom.gradient} dpiScale={1} />
+      <GrainyGradient
+        config={slide.bottom.gradient}
+        dpiScale={1}
+        ribbonCount={ribbonCount}
+        ribbonSpeed={ribbonSpeed}
+        rippleCount={rippleCount}
+        rippleSpeed={rippleSpeed}
+      />
       {slide.bottom.showGraph && (
         <LiveBarGraphRealtime
           answers={answers}
@@ -77,6 +93,10 @@ export function ResultsScreen() {
 
   const [guideUIVisible, setGuideUIVisible] = useState(false);
   const [tickerSpeed, setTickerSpeed] = useState(defaultRenderSettings.tickerSpeed);
+  const [ribbonCount, setRibbonCount] = useState(defaultBgSettings.ribbonCount);
+  const [ribbonSpeed, setRibbonSpeed] = useState(defaultBgSettings.ribbonSpeed);
+  const [rippleCount, setRippleCount] = useState(defaultBgSettings.rippleCount);
+  const [rippleSpeed, setRippleSpeed] = useState(defaultBgSettings.rippleSpeed);
   const [topCorners, setTopCorners] = useState<Quad | null>(null);
   const [bottomCorners, setBottomCorners] = useState<Quad | null>(null);
 
@@ -188,48 +208,118 @@ export function ResultsScreen() {
           onCornersChange={handleBottomCornersChange}
           onSizeChange={handleBottomSize}
         >
-          <LiveBottomSurface slide={liveSlide} answers={answers} />
+          <LiveBottomSurface
+            slide={liveSlide}
+            answers={answers}
+            ribbonCount={ribbonCount}
+            ribbonSpeed={ribbonSpeed}
+            rippleCount={rippleCount}
+            rippleSpeed={rippleSpeed}
+          />
         </PerspectivePanel>
       </div>
 
       {guideUIVisible && (
         <div
-          className="fixed top-4 left-4 z-[100] bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 w-64 space-y-4"
+          className="fixed top-4 left-4 z-[100] bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 w-64 space-y-4 max-h-[90vh] overflow-y-auto"
         >
           <h3 className="text-white/70 tracking-widest text-xs" style={{ fontFamily: "monospace" }}>
             RESULTS CONFIG
           </h3>
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center">
-              <label className="text-white/50 text-xs" style={{ fontFamily: "monospace" }}>
-                TICKER SPEED
-              </label>
-              <span className="text-white/80 text-xs tabular-nums" style={{ fontFamily: "monospace" }}>
-                {tickerSpeed.toFixed(1)}s
-              </span>
-            </div>
-            <input
-              type="range"
-              min={renderSliderRanges.tickerSpeed.min}
-              max={renderSliderRanges.tickerSpeed.max}
-              step={renderSliderRanges.tickerSpeed.step}
-              value={tickerSpeed}
-              onChange={(e) => setTickerSpeed(parseFloat(e.target.value))}
-              className="w-full h-1.5 appearance-none bg-white/10 rounded-full outline-none cursor-pointer
-                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
-                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-grab
-                [&::-webkit-slider-thumb]:active:cursor-grabbing"
-            />
-            <div className="flex justify-between text-white/20 text-[9px]" style={{ fontFamily: "monospace" }}>
-              <span>{renderSliderRanges.tickerSpeed.min}s (fast)</span>
-              <span>{renderSliderRanges.tickerSpeed.max}s (slow)</span>
-            </div>
-          </div>
+          <Slider
+            label="TICKER SPEED"
+            value={tickerSpeed}
+            onChange={setTickerSpeed}
+            range={renderSliderRanges.tickerSpeed}
+            unit="s"
+            decimals={1}
+            minHint="fast"
+            maxHint="slow"
+          />
+          <Slider
+            label="ORB COUNT"
+            value={ribbonCount}
+            onChange={setRibbonCount}
+            range={renderSliderRanges.ribbonCount}
+            decimals={0}
+          />
+          <Slider
+            label="ORB SPEED"
+            value={ribbonSpeed}
+            onChange={setRibbonSpeed}
+            range={renderSliderRanges.ribbonSpeed}
+            unit="x"
+            decimals={2}
+          />
+          <Slider
+            label="RIPPLE COUNT"
+            value={rippleCount}
+            onChange={setRippleCount}
+            range={renderSliderRanges.rippleCount}
+            decimals={0}
+          />
+          <Slider
+            label="RIPPLE SPEED"
+            value={rippleSpeed}
+            onChange={setRippleSpeed}
+            range={renderSliderRanges.rippleSpeed}
+            unit="x"
+            decimals={2}
+          />
           <div className="text-white/20 text-[9px] border-t border-white/5 pt-2" style={{ fontFamily: "monospace" }}>
             Ctrl+Space to hide config
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function Slider({
+  label,
+  value,
+  onChange,
+  range,
+  unit = "",
+  decimals = 2,
+  minHint,
+  maxHint,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  range: { min: number; max: number; step: number };
+  unit?: string;
+  decimals?: number;
+  minHint?: string;
+  maxHint?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-center">
+        <label className="text-white/50 text-xs" style={{ fontFamily: "monospace" }}>
+          {label}
+        </label>
+        <span className="text-white/80 text-xs tabular-nums" style={{ fontFamily: "monospace" }}>
+          {value.toFixed(decimals)}{unit}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={range.min}
+        max={range.max}
+        step={range.step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full h-1.5 appearance-none bg-white/10 rounded-full outline-none cursor-pointer
+          [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+          [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-grab
+          [&::-webkit-slider-thumb]:active:cursor-grabbing"
+      />
+      <div className="flex justify-between text-white/20 text-[9px]" style={{ fontFamily: "monospace" }}>
+        <span>{range.min}{unit}{minHint ? ` (${minHint})` : ""}</span>
+        <span>{range.max}{unit}{maxHint ? ` (${maxHint})` : ""}</span>
+      </div>
     </div>
   );
 }
