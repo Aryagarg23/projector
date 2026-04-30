@@ -49,6 +49,7 @@ export interface SlideConfig {
 export const defaultRenderSettings = {
   fontScale: 1.0,    // 0.3 – 3.0
   dpiScale: 1.0,     // 0.25 – 8.0 (canvas resolution multiplier)
+  tickerSpeed: 18,   // seconds per loop (lower = faster)
 };
 
 // ============================================================
@@ -64,6 +65,11 @@ export const renderSliderRanges = {
     min: 0.25,
     max: 8.0,
     step: 0.05,
+  },
+  tickerSpeed: {
+    min: 3,
+    max: 60,
+    step: 0.5,
   },
 };
 

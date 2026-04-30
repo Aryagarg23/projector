@@ -5,6 +5,8 @@ interface Props {
   setFontScale: (v: number) => void;
   dpiScale: number;
   setDpiScale: (v: number) => void;
+  tickerSpeed: number;
+  setTickerSpeed: (v: number) => void;
 }
 
 export function ConfigPanel({
@@ -12,6 +14,8 @@ export function ConfigPanel({
   setFontScale,
   dpiScale,
   setDpiScale,
+  tickerSpeed,
+  setTickerSpeed,
 }: Props) {
   return (
     <div className="fixed top-4 left-4 z-[100] bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 w-64 space-y-4">
@@ -93,6 +97,43 @@ export function ConfigPanel({
         >
           <span>{renderSliderRanges.dpiScale.min}x (fast)</span>
           <span>{renderSliderRanges.dpiScale.max}x (crisp)</span>
+        </div>
+      </div>
+
+      {/* Ticker Scroll Speed Slider */}
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center">
+          <label
+            className="text-white/50 text-xs"
+            style={{ fontFamily: "monospace" }}
+          >
+            TICKER SPEED
+          </label>
+          <span
+            className="text-white/80 text-xs tabular-nums"
+            style={{ fontFamily: "monospace" }}
+          >
+            {tickerSpeed.toFixed(1)}s
+          </span>
+        </div>
+        <input
+          type="range"
+          min={renderSliderRanges.tickerSpeed.min}
+          max={renderSliderRanges.tickerSpeed.max}
+          step={renderSliderRanges.tickerSpeed.step}
+          value={tickerSpeed}
+          onChange={(e) => setTickerSpeed(parseFloat(e.target.value))}
+          className="w-full h-1.5 appearance-none bg-white/10 rounded-full outline-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-grab
+            [&::-webkit-slider-thumb]:active:cursor-grabbing"
+        />
+        <div
+          className="flex justify-between text-white/20 text-[9px]"
+          style={{ fontFamily: "monospace" }}
+        >
+          <span>{renderSliderRanges.tickerSpeed.min}s (fast)</span>
+          <span>{renderSliderRanges.tickerSpeed.max}s (slow)</span>
         </div>
       </div>
 

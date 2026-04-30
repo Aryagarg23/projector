@@ -38,6 +38,11 @@ export default function App() {
   const [autoPlay, setAutoPlay] = useState(true);
   const [fontScale, setFontScale] = useState(defaultRenderSettings.fontScale);
   const [dpiScale, setDpiScale] = useState(defaultRenderSettings.dpiScale);
+  const [tickerSpeed, setTickerSpeed] = useState(defaultRenderSettings.tickerSpeed);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ticker-speed", `${tickerSpeed}s`);
+  }, [tickerSpeed]);
 
   // Corner state lifted here for shared-edge linking
   const [topCorners, setTopCorners] = useState<Quad | null>(null);
@@ -355,6 +360,8 @@ export default function App() {
             setFontScale={setFontScale}
             dpiScale={dpiScale}
             setDpiScale={setDpiScale}
+            tickerSpeed={tickerSpeed}
+            setTickerSpeed={setTickerSpeed}
           />
 
           {/* Reset button */}
