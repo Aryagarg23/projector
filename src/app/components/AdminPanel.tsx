@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase, type Poll } from "../lib/supabase";
+import { useAllPollCounts } from "../lib/useAllPollCounts";
 
 export function AdminPanel() {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const { countsByPollId } = useAllPollCounts();
 
   useEffect(() => {
     let cancelled = false;
@@ -124,12 +126,31 @@ export function AdminPanel() {
                   </div>
                 </div>
                 <div className="text-base font-semibold">{p.question}</div>
-                <div className="grid grid-cols-2 gap-1 text-xs opacity-70">
-                  <div>A · {p.option_a}</div>
-                  <div>B · {p.option_b}</div>
-                  <div>C · {p.option_c}</div>
-                  <div>D · {p.option_d}</div>
-                </div>
+                {(() => {
+                  const c = countsByPollId[p.id] ?? { A: 0, B: 0, C: 0, D: 0 };
+                  const total = c.A + c.B + c.C + c.D;
+                  return (
+                    <>
+                      <div className="text-[10px] tracking-[0.25em] opacity-50">
+                        {total} VOTE{total === 1 ? "" : "S"}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        {(["A", "B", "C", "D"] as const).map((k) => {
+                          const text = (p as unknown as Record<string, string | null>)[
+                            `option_${k.toLowerCase()}`
+                          ];
+                          if (!text) return null;
+                          return (
+                            <div key={k} className="flex justify-between gap-2 opacity-80">
+                              <span className="truncate">{k} · {text}</span>
+                              <span className="tabular-nums opacity-90">{c[k]}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             );
           })}

@@ -183,13 +183,12 @@ export function ResultsScreen() {
   // on answer-here can't peek at the live tally for what they're voting on.
   const [displayedQIdx, setDisplayedQIdx] = useState(0);
 
-  // When the active poll changes, ensure displayedQIdx isn't on the active one.
+  // When the active poll changes, jump displayedQIdx to the PREVIOUS question
+  // (the one just completed). Offset -1 so admins advancing the active poll
+  // immediately reveals the previous question's tally on results-here.
   useEffect(() => {
     if (livePollIdx < 0 || qCount === 0) return;
-    setDisplayedQIdx((prev) => {
-      if (prev !== livePollIdx) return prev;
-      return (livePollIdx + 1) % qCount;
-    });
+    setDisplayedQIdx((livePollIdx - 1 + qCount) % qCount);
   }, [livePollIdx]);
 
   // Cycle displayed graph every 45s, skipping the active poll's index.
