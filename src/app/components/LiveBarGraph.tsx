@@ -58,7 +58,7 @@ export function LiveBarGraph({
     >
       <div
         className="flex items-end justify-around w-full h-full"
-        style={{ gap: `${2 * fontScale}vw`, paddingTop: `${5 * fontScale}vh` }}
+        style={{ gap: `${2 * fontScale}vw`, paddingTop: `${7 * fontScale}vh` }}
       >
         {answers.map((answer, i) => {
           const displayVotes = displayed[i] ?? 0;
@@ -83,7 +83,8 @@ export function LiveBarGraph({
                   fontWeight: 600,
                   marginBottom: `${0.8 * fontScale}vh`,
                   textShadow: "0 0 20px rgba(255,255,255,0.3)",
-                  lineHeight: 1,
+                  lineHeight: 1.3,
+                  paddingTop: "0.15em",
                 }}
               >
                 {Math.round(pct)}%
