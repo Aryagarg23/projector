@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import type { MCQAnswer } from "./slideConfig";
 
 interface Props {
@@ -14,12 +14,25 @@ export function LiveBarGraph({
   dpiScale = 1,
   fontScale = 1,
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<number>(0);
   const votesRef = useRef<number[]>(answers.map((a) => a.votes));
   const displayRef = useRef<number[]>(answers.map((a) => a.votes));
   const answersRef = useRef(answers);
   answersRef.current = answers;
+  const [size, setSize] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      setSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Reset votes when answers change (slide change)
   useEffect(() => {
@@ -178,9 +191,16 @@ export function LiveBarGraph({
     };
   }, [accentHue, dpiScale, fontScale]);
 
+  const chartH = Math.floor(size.h * 0.8);
+
   return (
-    <div className="absolute inset-0 flex items-end p-4">
-      <canvas ref={canvasRef} className="w-full h-[80%]" />
+    <div ref={containerRef} className="absolute inset-0 flex items-end p-4">
+      {size.w > 0 && size.h > 0 && (
+        <canvas
+          ref={canvasRef}
+          style={{ display: "block", width: `${size.w - 32}px`, height: `${chartH}px` }}
+        />
+      )}
     </div>
   );
 }

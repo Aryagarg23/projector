@@ -7,6 +7,8 @@ import { LogoTicker } from "./LogoTicker";
 import {
   slides,
   defaultCornerInset,
+  defaultRenderSettings,
+  renderSliderRanges,
   type SlideConfig,
   type MCQAnswer,
 } from "./slideConfig";
@@ -74,8 +76,13 @@ export function ResultsScreen() {
   const { poll, counts } = useLivePoll();
 
   const [guideUIVisible, setGuideUIVisible] = useState(false);
+  const [tickerSpeed, setTickerSpeed] = useState(defaultRenderSettings.tickerSpeed);
   const [topCorners, setTopCorners] = useState<Quad | null>(null);
   const [bottomCorners, setBottomCorners] = useState<Quad | null>(null);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--ticker-speed", `${tickerSpeed}s`);
+  }, [tickerSpeed]);
   const topSizeRef = useRef({ w: 0, h: 0 });
   const bottomSizeRef = useRef({ w: 0, h: 0 });
 
@@ -184,6 +191,45 @@ export function ResultsScreen() {
           <LiveBottomSurface slide={liveSlide} answers={answers} />
         </PerspectivePanel>
       </div>
+
+      {guideUIVisible && (
+        <div
+          className="fixed top-4 left-4 z-[100] bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg p-4 w-64 space-y-4"
+        >
+          <h3 className="text-white/70 tracking-widest text-xs" style={{ fontFamily: "monospace" }}>
+            RESULTS CONFIG
+          </h3>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label className="text-white/50 text-xs" style={{ fontFamily: "monospace" }}>
+                TICKER SPEED
+              </label>
+              <span className="text-white/80 text-xs tabular-nums" style={{ fontFamily: "monospace" }}>
+                {tickerSpeed.toFixed(1)}s
+              </span>
+            </div>
+            <input
+              type="range"
+              min={renderSliderRanges.tickerSpeed.min}
+              max={renderSliderRanges.tickerSpeed.max}
+              step={renderSliderRanges.tickerSpeed.step}
+              value={tickerSpeed}
+              onChange={(e) => setTickerSpeed(parseFloat(e.target.value))}
+              className="w-full h-1.5 appearance-none bg-white/10 rounded-full outline-none cursor-pointer
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-grab
+                [&::-webkit-slider-thumb]:active:cursor-grabbing"
+            />
+            <div className="flex justify-between text-white/20 text-[9px]" style={{ fontFamily: "monospace" }}>
+              <span>{renderSliderRanges.tickerSpeed.min}s (fast)</span>
+              <span>{renderSliderRanges.tickerSpeed.max}s (slow)</span>
+            </div>
+          </div>
+          <div className="text-white/20 text-[9px] border-t border-white/5 pt-2" style={{ fontFamily: "monospace" }}>
+            Ctrl+Space to hide config
+          </div>
+        </div>
+      )}
     </div>
   );
 }
