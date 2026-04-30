@@ -35,7 +35,7 @@ export function LogoTicker(_props: Props) {
               <img
                 src={logo.src}
                 alt={logo.alt}
-                style={{ display: "block", height: "100%", width: "auto", flexShrink: 0, filter: "invert(1)", opacity: 0.92 }}
+                style={{ display: "block", height: "100%", width: "auto", flexShrink: 0, objectFit: "contain", filter: "invert(1)", opacity: 0.92 }}
               />
               <div style={{ width: 1, flexShrink: 0, background: "rgba(255,255,255,0.2)" }} />
             </div>
