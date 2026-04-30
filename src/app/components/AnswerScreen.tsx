@@ -196,7 +196,10 @@ export function AnswerScreen() {
               </h1>
 
               <div className="flex-1 flex flex-col gap-2">
-                {LABELS.map((label, i) => (
+                {LABELS.map((label, i) => {
+                  const text = options[i];
+                  if (text == null || text === "") return null;
+                  return (
                   <motion.button
                     key={label}
                     onClick={() => submit(label)}
@@ -214,9 +217,10 @@ export function AnswerScreen() {
                     >
                       {label}
                     </span>
-                    <span className="text-base sm:text-lg">{options[i]}</span>
+                    <span className="text-base sm:text-lg">{text}</span>
                   </motion.button>
-                ))}
+                  );
+                })}
               </div>
 
               {error && (

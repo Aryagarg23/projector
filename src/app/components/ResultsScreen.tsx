@@ -280,12 +280,16 @@ export function ResultsScreen() {
     const entry = pollsBySlide[slide?.id];
     const cnt = entry ? countsByPollId[entry.id] : undefined;
     const row = entry?.row;
-    return [
-      { label: "A", text: row?.option_a ?? "—", votes: cnt?.A ?? 0 },
-      { label: "B", text: row?.option_b ?? "—", votes: cnt?.B ?? 0 },
-      { label: "C", text: row?.option_c ?? "—", votes: cnt?.C ?? 0 },
-      { label: "D", text: row?.option_d ?? "—", votes: cnt?.D ?? 0 },
+    const raw = [
+      { label: "A", text: row?.option_a, votes: cnt?.A ?? 0 },
+      { label: "B", text: row?.option_b, votes: cnt?.B ?? 0 },
+      { label: "C", text: row?.option_c, votes: cnt?.C ?? 0 },
+      { label: "D", text: row?.option_d, votes: cnt?.D ?? 0 },
     ];
+    return raw
+      .filter((a): a is { label: string; text: string; votes: number } =>
+        a.text != null && a.text !== ""
+      );
   }, [displayedQIdx, pollsBySlide, countsByPollId]);
 
   return (

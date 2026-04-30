@@ -121,15 +121,17 @@ export function LiveBarGraph({
               </div>
 
               <div
-                className="text-white/80 text-center"
+                className="text-white/90 text-center"
                 style={{
                   fontFamily: "monospace",
-                  fontSize: `${1.6 * fontScale}vh`,
-                  marginTop: `${0.6 * fontScale}vh`,
-                  lineHeight: 1.2,
+                  fontSize: `${2.6 * fontScale}vh`,
+                  fontWeight: 500,
+                  marginTop: `${0.8 * fontScale}vh`,
+                  lineHeight: 1.25,
                   maxWidth: "100%",
                   overflowWrap: "break-word",
                   hyphens: "auto",
+                  letterSpacing: "0.01em",
                 }}
               >
                 {answer.text}

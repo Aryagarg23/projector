@@ -60,17 +60,20 @@ export default function App() {
     if (!livePoll) return base;
     // If live poll matches the graph slide, inject live counts
     if (livePoll.slide_id !== base.id) return base;
+    const liveAnswers = [
+      { label: "A", text: livePoll.option_a, votes: liveCounts.A },
+      { label: "B", text: livePoll.option_b, votes: liveCounts.B },
+      { label: "C", text: livePoll.option_c, votes: liveCounts.C },
+      { label: "D", text: livePoll.option_d, votes: liveCounts.D },
+    ].filter((a): a is { label: string; text: string; votes: number } =>
+      a.text != null && a.text !== ""
+    );
     return {
       ...base,
       bottom: {
         ...base.bottom,
         heroText: livePoll.question,
-        answers: [
-          { label: "A", text: livePoll.option_a, votes: liveCounts.A },
-          { label: "B", text: livePoll.option_b, votes: liveCounts.B },
-          { label: "C", text: livePoll.option_c, votes: liveCounts.C },
-          { label: "D", text: livePoll.option_d, votes: liveCounts.D },
-        ],
+        answers: liveAnswers,
       },
     };
   })();
