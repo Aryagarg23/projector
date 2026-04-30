@@ -1,6 +1,4 @@
-import { useRef, useEffect } from "react";
 import type { GradientConfig } from "./slideConfig";
-import { GrainyGradient } from "./GrainyGradient";
 
 interface Props {
   config: GradientConfig;
@@ -13,32 +11,16 @@ const LOGOS = [
   { src: "/logos/foresight_lab.svg", alt: "Foresight Lab" },
 ];
 
-// Duplicate for seamless loop
 const TICKER_ITEMS = [...LOGOS, ...LOGOS, ...LOGOS];
 
-export function LogoTicker({ config, dpiScale = 1 }: Props) {
-  const trackRef = useRef<HTMLDivElement>(null);
-
+export function LogoTicker(_props: Props) {
   return (
     <div className="relative w-full h-full overflow-hidden bg-black">
-      {/* Gradient bleeds through logo masks */}
-      <div className="absolute inset-0">
-        <GrainyGradient config={config} dpiScale={dpiScale} />
-      </div>
-
-      {/* Black overlay — logos punch holes through this via mix-blend-mode */}
-      <div
-        className="absolute inset-0"
-        style={{ background: "black", mixBlendMode: "multiply" }}
-      />
-
-      {/* Scrolling logo track — logos are white, multiply blend makes black areas opaque */}
       <div
         className="absolute inset-0 flex"
         style={{ maskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)" }}
       >
         <div
-          ref={trackRef}
           className="flex items-stretch ticker-scroll"
           style={{ willChange: "transform", height: "100%" }}
         >
@@ -48,17 +30,11 @@ export function LogoTicker({ config, dpiScale = 1 }: Props) {
                 src={logo.src}
                 alt={logo.alt}
                 className="w-auto object-contain flex-shrink-0"
-                style={{
-                  height: "100%",
-                  filter: "brightness(10) saturate(0)",
-                  mixBlendMode: "screen",
-                  opacity: 0.92,
-                }}
+                style={{ height: "100%", filter: "invert(1)", opacity: 0.92 }}
               />
-              {/* Divider */}
               <div
                 className="w-px self-stretch flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.15)", mixBlendMode: "screen" }}
+                style={{ background: "rgba(255,255,255,0.2)" }}
               />
             </div>
           ))}
