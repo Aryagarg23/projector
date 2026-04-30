@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MCQAnswer } from "./slideConfig";
 
 interface Props {
@@ -8,199 +8,135 @@ interface Props {
   fontScale?: number;
 }
 
+// HTML/CSS-based bar graph (projector variant). Mirrors LiveBarGraphRealtime
+// but adds a gentle random-walk so the bars feel alive even before any votes.
 export function LiveBarGraph({
   answers,
   accentHue = 180,
-  dpiScale = 1,
   fontScale = 1,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frameRef = useRef<number>(0);
   const votesRef = useRef<number[]>(answers.map((a) => a.votes));
-  const displayRef = useRef<number[]>(answers.map((a) => a.votes));
-  const answersRef = useRef(answers);
-  answersRef.current = answers;
-  const [size, setSize] = useState({ w: 0, h: 0 });
+  const targetRef = useRef<number[]>(answers.map((a) => a.votes));
+  const [displayed, setDisplayed] = useState<number[]>(() => answers.map((a) => a.votes));
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setSize({ w: width, h: height });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Reset votes when answers change (slide change)
+  // Reset when answers identity changes (slide change)
   useEffect(() => {
     votesRef.current = answers.map((a) => a.votes);
-    displayRef.current = answers.map((a) => a.votes);
+    targetRef.current = answers.map((a) => a.votes);
+    setDisplayed(answers.map((a) => a.votes));
   }, [answers]);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let running = true;
-    const dpr = dpiScale;
-
-    const resize = () => {
-      const w = canvas.offsetWidth;
-      const h = canvas.offsetHeight;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
-    // Simulate incoming websocket votes every 120ms
-    const voteInterval = setInterval(() => {
-      const currentAnswers = answersRef.current;
-      votesRef.current = votesRef.current.map((v, i) => {
-        // Random walk simulating live votes coming in
-        const delta = Math.random() < 0.3 ? Math.floor(Math.random() * 4) : 0;
-        return Math.max(currentAnswers[i].votes * 0.3, v + delta);
-      });
-    }, 120);
-
-    const animate = () => {
-      if (!running) return;
-
-      const w = canvas.offsetWidth;
-      const h = canvas.offsetHeight;
-      if (w === 0 || h === 0) {
-        frameRef.current = requestAnimationFrame(animate);
-        return;
+    let raf = 0;
+    let walkTimer = 0;
+    const tick = (now: number) => {
+      // Every ~600ms, nudge target votes for a "live" feel
+      if (now - walkTimer > 600) {
+        walkTimer = now;
+        const v = votesRef.current;
+        for (let i = 0; i < v.length; i++) {
+          v[i] = Math.max(0, v[i] + (Math.random() - 0.4) * 1.5);
+        }
+        targetRef.current = [...v];
       }
-
-      // Smooth lerp display values toward actual votes
-      for (let i = 0; i < displayRef.current.length; i++) {
-        displayRef.current[i] +=
-          (votesRef.current[i] - displayRef.current[i]) * 0.08;
-      }
-
-      ctx.clearRect(0, 0, w, h);
-
-      const currentAnswers = answersRef.current;
-      const barCount = currentAnswers.length; // Always 4
-      const totalVotes = displayRef.current.reduce((s, v) => s + v, 0) || 1;
-      const maxVotes = Math.max(...displayRef.current, 1);
-
-      const padding = {
-        top: 20 * fontScale,
-        right: 30,
-        bottom: 90 * fontScale,
-        left: 30,
-      };
-      const chartWidth = w - padding.left - padding.right;
-      const chartHeight = h - padding.top - padding.bottom;
-      const gap = chartWidth * 0.06;
-      const totalGaps = (barCount - 1) * gap;
-      const barWidth = (chartWidth - totalGaps) / barCount;
-
-      // Draw bars
-      currentAnswers.forEach((answer, i) => {
-        const displayVal = displayRef.current[i] ?? 0;
-        const pct = displayVal / totalVotes;
-        const barHeight = (displayVal / maxVotes) * chartHeight;
-        const x = padding.left + i * (barWidth + gap);
-        const y = h - padding.bottom - barHeight;
-
-        // Per-answer color: spread across hue range
-        const hueOffset = i * 25;
-        const barHue = (accentHue + hueOffset) % 360;
-
-        // Bar glow
-        ctx.shadowColor = `hsla(${barHue}, 80%, 55%, 0.4)`;
-        ctx.shadowBlur = 20;
-
-        // Bar fill
-        const grad = ctx.createLinearGradient(x, y, x, h - padding.bottom);
-        grad.addColorStop(0, `hsla(${barHue}, 80%, 60%, 0.9)`);
-        grad.addColorStop(1, `hsla(${barHue}, 70%, 35%, 0.7)`);
-        ctx.fillStyle = grad;
-
-        // Rounded top
-        const radius = Math.min(12, barWidth * 0.15);
-        ctx.beginPath();
-        ctx.moveTo(x, h - padding.bottom);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.lineTo(x + barWidth - radius, y);
-        ctx.arcTo(x + barWidth, y, x + barWidth, y + radius, radius);
-        ctx.lineTo(x + barWidth, h - padding.bottom);
-        ctx.closePath();
-        ctx.fill();
-
-        // Reset shadow
-        ctx.shadowBlur = 0;
-
-        // Percentage on top of bar
-        const pctText = `${Math.round(pct * 100)}%`;
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.font = `${16 * fontScale}px monospace`;
-        ctx.textAlign = "center";
-        ctx.fillText(pctText, x + barWidth / 2, y - 10 * fontScale);
-
-        // Vote count inside bar
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.font = `${12 * fontScale}px monospace`;
-        ctx.fillText(
-          `${Math.round(displayVal)}`,
-          x + barWidth / 2,
-          Math.max(y + 20 * fontScale, h - padding.bottom - 10)
-        );
-
-        // Answer label below bar (big letter)
-        ctx.fillStyle = `hsla(${barHue}, 80%, 70%, 1)`;
-        ctx.font = `bold ${28 * fontScale}px monospace`;
-        ctx.textAlign = "center";
-        ctx.fillText(
-          answer.label,
-          x + barWidth / 2,
-          h - padding.bottom + 32 * fontScale
-        );
-
-        // Answer text below letter
-        ctx.fillStyle = "rgba(255,255,255,0.55)";
-        ctx.font = `${13 * fontScale}px monospace`;
-        ctx.fillText(
-          answer.text,
-          x + barWidth / 2,
-          h - padding.bottom + 54 * fontScale
-        );
-      });
-
-      frameRef.current = requestAnimationFrame(animate);
+      setDisplayed((prev) =>
+        prev.map((p, i) => p + ((targetRef.current[i] ?? 0) - p) * 0.08)
+      );
+      raf = requestAnimationFrame(tick);
     };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-    frameRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      running = false;
-      clearInterval(voteInterval);
-      cancelAnimationFrame(frameRef.current);
-      ro.disconnect();
-    };
-  }, [accentHue, dpiScale, fontScale]);
-
-  const chartH = Math.floor(size.h * 0.8);
+  const total = displayed.reduce((s, v) => s + v, 0);
+  const maxVotes = Math.max(1, ...displayed);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 flex items-end p-4">
-      {size.w > 0 && size.h > 0 && (
-        <canvas
-          ref={canvasRef}
-          style={{ display: "block", width: `${size.w - 32}px`, height: `${chartH}px` }}
-        />
-      )}
+    <div
+      className="absolute inset-0 flex items-end justify-center"
+      style={{ padding: `${4 * fontScale}vh ${4 * fontScale}vw ${2 * fontScale}vh` }}
+    >
+      <div
+        className="flex items-end justify-around w-full h-full"
+        style={{ gap: `${2 * fontScale}vw`, paddingTop: `${5 * fontScale}vh` }}
+      >
+        {answers.map((answer, i) => {
+          const displayVotes = displayed[i] ?? 0;
+          const pct = total > 0 ? (displayVotes / total) * 100 : 0;
+          const heightPct = (displayVotes / maxVotes) * 100;
+          const hue = (accentHue + i * 25) % 360;
+          const barColorTop = `hsl(${hue}, 80%, 62%)`;
+          const barColorBot = `hsl(${hue}, 70%, 38%)`;
+          const labelColor = `hsl(${hue}, 80%, 72%)`;
+
+          return (
+            <div
+              key={answer.label}
+              className="flex flex-col items-center justify-end h-full"
+              style={{ flex: "1 1 0", minWidth: 0 }}
+            >
+              <div
+                className="text-white/95 tabular-nums"
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: `${3.2 * fontScale}vh`,
+                  fontWeight: 600,
+                  marginBottom: `${0.8 * fontScale}vh`,
+                  textShadow: "0 0 20px rgba(255,255,255,0.3)",
+                  lineHeight: 1,
+                }}
+              >
+                {Math.round(pct)}%
+              </div>
+
+              <div
+                className="w-full relative"
+                style={{ flex: "1 1 0", display: "flex", alignItems: "flex-end", minHeight: 0 }}
+              >
+                <div
+                  className="w-full rounded-t-lg"
+                  style={{
+                    height: `${heightPct}%`,
+                    background: `linear-gradient(to top, ${barColorBot}, ${barColorTop})`,
+                    boxShadow: `0 0 30px hsla(${hue}, 80%, 55%, 0.45), inset 0 1px 0 rgba(255,255,255,0.2)`,
+                    transition: "height 0.4s cubic-bezier(.2,.7,.2,1)",
+                    minHeight: heightPct > 0 ? "2px" : "0",
+                  }}
+                />
+              </div>
+
+              <div
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: `${4.2 * fontScale}vh`,
+                  fontWeight: 700,
+                  color: labelColor,
+                  marginTop: `${1.2 * fontScale}vh`,
+                  lineHeight: 1,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {answer.label}
+              </div>
+
+              <div
+                className="text-white/80 text-center"
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: `${1.6 * fontScale}vh`,
+                  marginTop: `${0.6 * fontScale}vh`,
+                  lineHeight: 1.2,
+                  maxWidth: "100%",
+                  overflowWrap: "break-word",
+                  hyphens: "auto",
+                }}
+              >
+                {answer.text}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

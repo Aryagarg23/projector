@@ -9,13 +9,12 @@ const LABELS: Choice[] = ["A", "B", "C", "D"];
 
 const questionSlides = slides.filter((s) => s.bottom.showGraph);
 
-// Returns the gradient of the PREVIOUS question (offset -1), so the active
-// question's own results are never shown while voting is open.
+// Returns the gradient that matches the active question. results-here is now
+// decoupled and never shows the active question's tally, so voters can safely
+// see their own question's colors here.
 function backgroundGradientFor(slideId: string) {
-  const qIdx = questionSlides.findIndex((s) => s.id === slideId);
-  if (qIdx < 0) return slides[0].bottom.gradient;
-  const prevIdx = (qIdx - 1 + questionSlides.length) % questionSlides.length;
-  return questionSlides[prevIdx].bottom.gradient;
+  const slide = questionSlides.find((s) => s.id === slideId);
+  return slide?.bottom.gradient ?? slides[0].bottom.gradient;
 }
 
 export function AnswerScreen() {

@@ -247,7 +247,7 @@ export const slides: SlideConfig[] = [
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 185,
+        baseHue: 205,
         hueSpeed: 0.5,
         grainIntensity: 25,
         layers: 4,
@@ -262,7 +262,7 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 162,
+        baseHue: 140,
         hueSpeed: 0.5,
         grainIntensity: 20,
         layers: 4,
@@ -274,7 +274,7 @@ export const slides: SlideConfig[] = [
       heroText: "THE NON-INVASIVE AGE",
       heroSize: 3.5,
       showGraph: true,
-      graphHue: 173,
+      graphHue: 155,
       answers: [
         { label: "A", text: "Upgrades Available", votes: 0 },
         { label: "B", text: "Needles Not Required", votes: 0 },
@@ -289,7 +289,7 @@ export const slides: SlideConfig[] = [
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 305,
+        baseHue: 280,
         hueSpeed: 0.5,
         grainIntensity: 25,
         layers: 4,
@@ -304,7 +304,7 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 272,
+        baseHue: 315,
         hueSpeed: 0.5,
         grainIntensity: 20,
         layers: 4,
@@ -316,7 +316,7 @@ export const slides: SlideConfig[] = [
       heroText: "TECHNO-SOCIAL TUG-OF-WAR",
       heroSize: 3.5,
       showGraph: true,
-      graphHue: 288,
+      graphHue: 305,
       answers: [
         { label: "A", text: "Just Chat It", votes: 0 },
         { label: "B", text: "Your AI Frenemy", votes: 0 },
