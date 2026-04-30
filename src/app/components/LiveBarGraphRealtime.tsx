@@ -22,7 +22,6 @@ export function LiveBarGraphRealtime({
   // smoothing via the transition rule below. No internal state, no rAF, so
   // there's no length-mismatch bug when answers populate after initial render.
   const total = answers.reduce((s, a) => s + a.votes, 0);
-  const maxVotes = Math.max(1, ...answers.map((a) => a.votes));
   const cols = answers.length;
 
   return (
@@ -73,7 +72,8 @@ export function LiveBarGraphRealtime({
 
         {/* Row 2 — bars (CSS transition smooths the height changes) */}
         {answers.map((answer, i) => {
-          const heightPct = (answer.votes / maxVotes) * 100;
+          // Static scale: bar height = this option's share of total votes
+          const heightPct = total > 0 ? (answer.votes / total) * 100 : 0;
           const hue = (accentHue + i * 25) % 360;
           const barColorTop = `hsl(${hue}, 80%, 62%)`;
           const barColorBot = `hsl(${hue}, 70%, 38%)`;

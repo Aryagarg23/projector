@@ -16,7 +16,6 @@ export function LiveBarGraph({
   fontScale = 1,
 }: Props) {
   const total = answers.reduce((s, a) => s + a.votes, 0);
-  const maxVotes = Math.max(1, ...answers.map((a) => a.votes));
   const cols = answers.length;
 
   return (
@@ -60,7 +59,7 @@ export function LiveBarGraph({
         })}
 
         {answers.map((answer, i) => {
-          const heightPct = (answer.votes / maxVotes) * 100;
+          const heightPct = total > 0 ? (answer.votes / total) * 100 : 0;
           const hue = (accentHue + i * 25) % 360;
           const barColorTop = `hsl(${hue}, 80%, 62%)`;
           const barColorBot = `hsl(${hue}, 70%, 38%)`;
