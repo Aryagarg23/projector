@@ -13,13 +13,13 @@ export function HeroOverlay({ config, slideId, fontScale = 1, alignTop = false }
   const size = (config.heroSize ?? 3) * fontScale;
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="sync">
       <motion.div
         key={slideId}
         initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         exit={{ opacity: 0, y: -30, filter: "blur(10px)" }}
-        transition={{ duration: 1.0, ease: "easeInOut" }}
+        transition={{ duration: 0.8, ease: "easeInOut" }}
         className="absolute inset-0 flex flex-col items-center z-10 pointer-events-none px-8"
         style={{ justifyContent: alignTop ? "flex-start" : "center", paddingTop: alignTop ? "5%" : undefined }}
       >

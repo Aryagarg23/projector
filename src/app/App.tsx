@@ -99,7 +99,7 @@ export default function App() {
   }, []);
 
   // Auto-cycle graph every graphSwapDelay seconds. The timer always runs;
-  // vote arrivals reset it (cycleResetKey).
+  // vote arrivals or config-mode-exit reset it (cycleResetKey).
   const [cycleResetKey, setCycleResetKey] = useState(0);
   const graphSwapDelayRef = useRef(graphSwapDelay);
   graphSwapDelayRef.current = graphSwapDelay;
@@ -117,6 +117,12 @@ export default function App() {
     schedule();
     return () => clearTimeout(timer);
   }, [qCount, cycleResetKey]);
+
+  // Restart the cycle when the user closes the config panel — picks up any
+  // slider changes immediately instead of waiting for the current tick.
+  useEffect(() => {
+    if (!guideUIVisible) setCycleResetKey((k) => k + 1);
+  }, [guideUIVisible]);
 
   // When a vote arrives (counts total increases), jump graph to live poll's question
   // and restart the 45s timer.
