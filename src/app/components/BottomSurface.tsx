@@ -22,8 +22,8 @@ export function BottomSurface({ slide, graphSlide, fontScale = 1, dpiScale = 1 }
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <GrainyGradient config={slide.bottom.gradient} dpiScale={dpiScale} />
-      {slide.bottom.showGraph && (
+      <GrainyGradient config={graph.bottom.gradient} dpiScale={dpiScale} />
+      {graph.bottom.showGraph && (
         <LiveBarGraph
           answers={graph.bottom.answers ?? defaultAnswers}
           accentHue={graph.bottom.graphHue ?? graph.bottom.gradient.baseHue}
@@ -32,10 +32,10 @@ export function BottomSurface({ slide, graphSlide, fontScale = 1, dpiScale = 1 }
         />
       )}
       <HeroOverlay
-        config={slide.bottom}
-        slideId={`bottom-${slide.id}`}
+        config={graph.bottom}
+        slideId={`bottom-${graph.id}`}
         fontScale={fontScale}
-        alignTop={slide.bottom.showGraph}
+        alignTop={graph.bottom.showGraph}
       />
     </div>
   );
