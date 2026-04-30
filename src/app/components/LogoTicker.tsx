@@ -13,8 +13,8 @@ interface Props {
 // Foresight Lab is roughly 3:2 (chunky), UC is ~3.79:1 (wide). We scale
 // foresight down a touch so it doesn't visually overpower the row.
 const LOGOS = [
-  { src: "/logos/UC.png", alt: "University of Cincinnati", scale: 1.0 },
-  { src: "/logos/foresight_lab.png", alt: "Foresight Lab", scale: 0.78 },
+  { src: "/logos/UC.png", alt: "University of Cincinnati", scale: 1.0, invert: true },
+  { src: "/logos/foresight_lab.png", alt: "Foresight Lab", scale: 0.78, invert: false },
 ];
 
 function LogoSet({ height, refCb }: { height: number; refCb?: (el: HTMLDivElement | null) => void }) {
