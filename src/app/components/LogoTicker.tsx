@@ -30,7 +30,7 @@ export function LogoTicker(_props: Props) {
           {TICKER_ITEMS.map((logo, i) => (
             <div
               key={i}
-              style={{ display: "flex", alignItems: "stretch", flexShrink: 0, padding: "0 40px", gap: 40 }}
+              style={{ display: "flex", alignItems: "stretch", flexShrink: 0 }}
             >
               <img
                 src={logo.src}
