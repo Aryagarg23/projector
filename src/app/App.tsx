@@ -24,10 +24,17 @@ function makeDefaultCorners(w: number, h: number): Quad {
   ];
 }
 
+// Question slides only (excludes welcome etc.)
+const questionSlides = slides.filter((s) => s.bottom.showGraph);
+const qCount = questionSlides.length;
+
 export default function App() {
   const [resetKey, setResetKey] = useState(0);
   const [guideUIVisible, setGuideUIVisible] = useState(true);
   const [slideIndex, setSlideIndex] = useState(0);
+  // graphQIdx is an index into questionSlides — which question's results to display.
+  // Starts at qCount-1 so when Q1 (qIdx 0) is active the graph shows Q4 (qIdx 3).
+  const [graphQIdx, setGraphQIdx] = useState(Math.max(0, qCount - 1));
   const [autoPlay, setAutoPlay] = useState(true);
   const [fontScale, setFontScale] = useState(defaultRenderSettings.fontScale);
   const [dpiScale, setDpiScale] = useState(defaultRenderSettings.dpiScale);
@@ -41,17 +48,16 @@ export default function App() {
   const baseSlide = slides[slideIndex];
   const { poll: livePoll, counts: liveCounts } = useLivePoll();
 
-  // If a live poll is active and matches a slide, overlay live vote counts + question text.
-  const currentSlide = (() => {
-    if (!livePoll) return baseSlide;
-    const match = slides.find((s) => s.id === livePoll.slide_id);
-    if (!match) return baseSlide;
-    const useSlide = match.id === baseSlide.id ? baseSlide : match;
-    if (!useSlide.bottom.showGraph) return useSlide;
+  // The slide whose graph/answers we display in the bottom surface
+  const graphSlide = (() => {
+    const base = questionSlides[graphQIdx % Math.max(1, qCount)] ?? questionSlides[0] ?? baseSlide;
+    if (!livePoll) return base;
+    // If live poll matches the graph slide, inject live counts
+    if (livePoll.slide_id !== base.id) return base;
     return {
-      ...useSlide,
+      ...base,
       bottom: {
-        ...useSlide.bottom,
+        ...base.bottom,
         heroText: livePoll.question,
         answers: [
           { label: "A", text: livePoll.option_a, votes: liveCounts.A },
@@ -63,14 +69,20 @@ export default function App() {
     };
   })();
 
-  // Auto-jump slide index to match the active live poll
+  // currentSlide drives top surface (question text) + bottom gradient/hero label.
+  // Graph answers come from graphSlide instead.
+  const currentSlide = baseSlide;
+
+  // When a vote is submitted: livePoll.slide_id changes → jump graphQIdx to that question
   useEffect(() => {
     if (!livePoll) return;
-    const idx = slides.findIndex((s) => s.id === livePoll.slide_id);
-    if (idx >= 0 && idx !== slideIndex) setSlideIndex(idx);
+    const idx = questionSlides.findIndex((s) => s.id === livePoll.slide_id);
+    if (idx >= 0) setGraphQIdx(idx);
+    // Also keep the top surface on the matching question slide
+    const slideIdx = slides.findIndex((s) => s.id === livePoll.slide_id);
+    if (slideIdx >= 0 && slideIdx !== slideIndex) setSlideIndex(slideIdx);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [livePoll?.slide_id]);
-
 
   const goNext = useCallback(() => {
     setSlideIndex((i) => (i + 1) % slides.length);
@@ -79,6 +91,17 @@ export default function App() {
   const goPrev = useCallback(() => {
     setSlideIndex((i) => (i - 1 + slides.length) % slides.length);
   }, []);
+
+  // Auto-cycle graph every 45s independently of question slide.
+  // Pauses while a live poll is active (vote just came in).
+  useEffect(() => {
+    if (livePoll) return;
+    if (qCount === 0) return;
+    const timer = setInterval(() => {
+      setGraphQIdx((i) => (i + 1) % qCount);
+    }, 45000);
+    return () => clearInterval(timer);
+  }, [livePoll]);
 
   // Initialize corners when sizes are known
   const handleTopSize = useCallback((w: number, h: number) => {
@@ -316,6 +339,7 @@ export default function App() {
         >
           <BottomSurface
             slide={currentSlide}
+            graphSlide={graphSlide}
             fontScale={fontScale}
             dpiScale={dpiScale}
           />

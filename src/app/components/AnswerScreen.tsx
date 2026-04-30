@@ -7,9 +7,15 @@ import { slides } from "./slideConfig";
 type Choice = "A" | "B" | "C" | "D";
 const LABELS: Choice[] = ["A", "B", "C", "D"];
 
-function gradientFor(slideId: string) {
-  const slide = slides.find((s) => s.id === slideId) ?? slides[0];
-  return slide.bottom.gradient;
+const questionSlides = slides.filter((s) => s.bottom.showGraph);
+
+// Returns the gradient of the PREVIOUS question (offset -1), so the active
+// question's own results are never shown while voting is open.
+function backgroundGradientFor(slideId: string) {
+  const qIdx = questionSlides.findIndex((s) => s.id === slideId);
+  if (qIdx < 0) return slides[0].bottom.gradient;
+  const prevIdx = (qIdx - 1 + questionSlides.length) % questionSlides.length;
+  return questionSlides[prevIdx].bottom.gradient;
 }
 
 export function AnswerScreen() {
@@ -113,7 +119,7 @@ export function AnswerScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lastChoice]);
 
-  const gradient = gradientFor(activePoll?.slide_id ?? "welcome");
+  const gradient = backgroundGradientFor(activePoll?.slide_id ?? "welcome");
   const options = activePoll
     ? [activePoll.option_a, activePoll.option_b, activePoll.option_c, activePoll.option_d]
     : [];

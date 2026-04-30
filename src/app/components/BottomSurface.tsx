@@ -5,11 +5,14 @@ import type { SlideConfig } from "./slideConfig";
 
 interface Props {
   slide: SlideConfig;
+  /** Separate slide whose answers/graph to display — decoupled from the question slide */
+  graphSlide?: SlideConfig;
   fontScale?: number;
   dpiScale?: number;
 }
 
-export function BottomSurface({ slide, fontScale = 1, dpiScale = 1 }: Props) {
+export function BottomSurface({ slide, graphSlide, fontScale = 1, dpiScale = 1 }: Props) {
+  const graph = graphSlide ?? slide;
   const defaultAnswers = [
     { label: "A", text: "Option A", votes: 25 },
     { label: "B", text: "Option B", votes: 25 },
@@ -22,8 +25,8 @@ export function BottomSurface({ slide, fontScale = 1, dpiScale = 1 }: Props) {
       <GrainyGradient config={slide.bottom.gradient} dpiScale={dpiScale} />
       {slide.bottom.showGraph && (
         <LiveBarGraph
-          answers={slide.bottom.answers ?? defaultAnswers}
-          accentHue={slide.bottom.graphHue ?? slide.bottom.gradient.baseHue}
+          answers={graph.bottom.answers ?? defaultAnswers}
+          accentHue={graph.bottom.graphHue ?? graph.bottom.gradient.baseHue}
           dpiScale={dpiScale}
           fontScale={fontScale}
         />
