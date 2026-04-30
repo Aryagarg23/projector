@@ -54,25 +54,6 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
     let running = true;
     let time = 0;
 
-    // ── Pre-bake a noise tile once (way cheaper than per-frame ImageData) ───
-    if (!grainTileRef.current) {
-      const TILE = 256;
-      const tile = document.createElement("canvas");
-      tile.width = TILE;
-      tile.height = TILE;
-      const tctx = tile.getContext("2d");
-      if (tctx) {
-        const img = tctx.createImageData(TILE, TILE);
-        const d = img.data;
-        for (let i = 0; i < d.length; i += 4) {
-          const n = (Math.random() * 255) | 0;
-          d[i] = n; d[i + 1] = n; d[i + 2] = n; d[i + 3] = 255;
-        }
-        tctx.putImageData(img, 0, 0);
-      }
-      grainTileRef.current = tile;
-    }
-
     // ── Flowing ribbons (kept from before) ──────────────────────────────────
     interface TrailPoint { x: number; y: number }
     interface Ribbon {
