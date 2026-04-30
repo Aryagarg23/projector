@@ -75,17 +75,16 @@ export function LiveBarGraphRealtime({
           return (
             <div
               key={`pct-${answer.label}`}
-              className="text-white text-left tabular-nums uppercase"
+              className="text-white/55 text-left tabular-nums"
               style={{
                 gridColumn: i + 1,
                 gridRow: 1,
-                fontFamily: HEAD_FONT,
-                fontSize: `${5.5 * fontScale}vh`,
-                fontWeight: 900,
-                lineHeight: 1.05,
-                letterSpacing: "-0.025em",
-                textShadow: "0 2px 18px rgba(0,0,0,0.35)",
-                paddingBottom: `${1 * fontScale}vh`,
+                fontFamily: "'Archivo', system-ui, sans-serif",
+                fontSize: `${1.8 * fontScale}vh`,
+                fontWeight: 500,
+                lineHeight: 1.2,
+                letterSpacing: "0.02em",
+                paddingBottom: `${0.6 * fontScale}vh`,
               }}
             >
               {Math.round(pct)}%
