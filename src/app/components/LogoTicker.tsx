@@ -8,10 +8,13 @@ interface Props {
   speedSeconds?: number;
 }
 
+// Per-logo display height as a fraction of the ticker strip — lets us
+// balance logos with very different intrinsic aspect ratios.
+// Foresight Lab is roughly 3:2 (chunky), UC is ~3.79:1 (wide). We scale
+// foresight down a touch so it doesn't visually overpower the row.
 const LOGOS = [
-  { src: "/logos/UC.png", alt: "University of Cincinnati" },
-  { src: "/logos/1819.svg", alt: "1819 Innovation Hub" },
-  { src: "/logos/foresight_lab.svg", alt: "Foresight Lab" },
+  { src: "/logos/UC.png", alt: "University of Cincinnati", scale: 1.0 },
+  { src: "/logos/foresight_lab.png", alt: "Foresight Lab", scale: 0.78 },
 ];
 
 function LogoSet({ height, refCb }: { height: number; refCb?: (el: HTMLDivElement | null) => void }) {
@@ -23,17 +26,34 @@ function LogoSet({ height, refCb }: { height: number; refCb?: (el: HTMLDivElemen
       {LOGOS.map((logo, i) => (
         <div
           key={i}
-          style={{ display: "flex", alignItems: "center", height: `${height}px`, flexShrink: 0 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: `${height}px`,
+            flexShrink: 0,
+            paddingLeft: `${height * 0.25}px`,
+            paddingRight: `${height * 0.25}px`,
+          }}
         >
           <img
             src={logo.src}
             alt={logo.alt}
-            style={{ display: "block", height: `${height}px`, width: "auto", flexShrink: 0, filter: "invert(1)", opacity: 0.92 }}
+            style={{
+              display: "block",
+              height: `${height * logo.scale}px`,
+              width: "auto",
+              flexShrink: 0,
+              filter: "invert(1)",
+              opacity: 0.92,
+            }}
           />
           <div
             style={{
-              width: 1, height: `${height}px`, flexShrink: 0,
-              marginLeft: 2, marginRight: 2, background: "rgba(255,255,255,0.2)",
+              width: 1,
+              height: `${height * 0.55}px`,
+              flexShrink: 0,
+              marginLeft: `${height * 0.25}px`,
+              background: "rgba(255,255,255,0.2)",
             }}
           />
         </div>
