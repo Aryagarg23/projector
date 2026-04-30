@@ -150,10 +150,10 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
 
         const grad = ctx.createRadialGradient(gx, gy, 0, gx, gy, radius);
         const alpha = b === 0 ? 1 : 0.38;
-        grad.addColorStop(0,   `hsla(${hueA}, ${satA}%, ${lit + 14}%, ${alpha})`);
-        grad.addColorStop(0.5, `hsla(${hueB}, ${satA - 6}%, ${lit + 4}%, ${alpha * 0.7})`);
+        grad.addColorStop(0,   `hsla(${hueA}, ${satA}%, ${lit + 22}%, ${alpha})`);
+        grad.addColorStop(0.5, `hsla(${hueB}, ${satA}%, ${lit + 8}%, ${alpha * 0.8})`);
         grad.addColorStop(1,   b === 0
-          ? `hsla(${hueB}, ${satA - 16}%, ${Math.max(lit - 8, 2)}%, 1)`
+          ? `hsla(${hueB}, ${satA}%, ${Math.max(lit - 2, 4)}%, 1)`
           : `hsla(${hueA}, ${satA}%, ${lit}%, 0)`);
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);

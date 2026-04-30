@@ -86,13 +86,13 @@ export const slides: SlideConfig[] = [
     top: {
       gradient: {
         baseHue: 205,
-        hueSpeed: 0.4,
-        grainIntensity: 55,
-        layers: 4,
-        saturation: 80,
-        lightness: 12,
-        animSpeed: 0.003,
-        particles: 32,
+        hueSpeed: 0.5,
+        grainIntensity: 30,
+        layers: 5,
+        saturation: 100,
+        lightness: 22,
+        animSpeed: 0.005,
+        particles: 40,
       },
       heroText: "FUTURES FORUM",
       heroSubtext: "LIVE POLL // REAL-TIME",
@@ -101,13 +101,13 @@ export const slides: SlideConfig[] = [
     bottom: {
       gradient: {
         baseHue: 355,
-        hueSpeed: 0.4,
-        grainIntensity: 60,
-        layers: 4,
-        saturation: 92,
-        lightness: 10,
-        animSpeed: 0.003,
-        particles: 45,
+        hueSpeed: 0.5,
+        grainIntensity: 30,
+        layers: 5,
+        saturation: 100,
+        lightness: 18,
+        animSpeed: 0.005,
+        particles: 55,
       },
       heroText: "NEW AMERICAN DREAM",
       heroSubtext: "WHICH DRIVER SHAPES THE FUTURE?",
@@ -117,21 +117,19 @@ export const slides: SlideConfig[] = [
   },
 
   // ── SLIDE 2: Q1 — New American Dream ──
-  // Flag color journey: sky blue (hue 205) → royal blue → violet → magenta → red (hue 355)
-  // Top surface anchors the blue end, bottom anchors the red end
   {
     id: "q1",
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 210,        // sky → royal blue
-        hueSpeed: 0.4,
-        grainIntensity: 40,
-        layers: 3,
-        saturation: 88,
-        lightness: 14,
-        animSpeed: 0.004,
-        particles: 26,
+        baseHue: 210,
+        hueSpeed: 0.5,
+        grainIntensity: 25,
+        layers: 4,
+        saturation: 100,
+        lightness: 22,
+        animSpeed: 0.005,
+        particles: 32,
       },
       heroText: "QUESTION 1 / 4",
       heroSubtext: "WHICH SUB-DRIVER WILL HAVE THE MOST IMPACT?",
@@ -139,14 +137,14 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 355,        // deep red
-        hueSpeed: 0.4,
-        grainIntensity: 35,
-        layers: 3,
-        saturation: 90,
-        lightness: 9,
-        animSpeed: 0.004,
-        particles: 28,
+        baseHue: 355,
+        hueSpeed: 0.5,
+        grainIntensity: 20,
+        layers: 4,
+        saturation: 100,
+        lightness: 18,
+        animSpeed: 0.005,
+        particles: 35,
       },
       heroText: "NEW AMERICAN DREAM",
       heroSize: 3.5,
@@ -162,20 +160,19 @@ export const slides: SlideConfig[] = [
   },
 
   // ── SLIDE 3: Q2 — Lifemaxxing ──
-  // Golden yellow (hue 45) → burnt orange (hue 22), with teal accent bleeding in (hue ~175)
   {
     id: "q2",
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 45,         // bright golden yellow
-        hueSpeed: 0.4,
-        grainIntensity: 40,
-        layers: 3,
-        saturation: 92,
-        lightness: 14,
-        animSpeed: 0.004,
-        particles: 26,
+        baseHue: 45,
+        hueSpeed: 0.5,
+        grainIntensity: 25,
+        layers: 4,
+        saturation: 100,
+        lightness: 24,
+        animSpeed: 0.005,
+        particles: 32,
       },
       heroText: "QUESTION 2 / 4",
       heroSubtext: "WHICH SUB-DRIVER WILL HAVE THE MOST IMPACT?",
@@ -183,14 +180,14 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 22,         // deep burnt orange
-        hueSpeed: 0.4,
-        grainIntensity: 35,
-        layers: 3,
-        saturation: 90,
-        lightness: 9,
-        animSpeed: 0.004,
-        particles: 28,
+        baseHue: 22,
+        hueSpeed: 0.5,
+        grainIntensity: 20,
+        layers: 4,
+        saturation: 100,
+        lightness: 18,
+        animSpeed: 0.005,
+        particles: 35,
       },
       heroText: "LIFEMAXXING",
       heroSize: 3.5,
@@ -206,21 +203,19 @@ export const slides: SlideConfig[] = [
   },
 
   // ── SLIDE 4: Q3 — The Non-Invasive Age ──
-  // Bright cyan (hue 183) top → vivid electric mint (hue 162) bottom
-  // blue-teal (hue 195) accent, yellow-green (hue 75) warmth at extremes
   {
     id: "q3",
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 185,        // bright cyan
-        hueSpeed: 0.4,
-        grainIntensity: 40,
-        layers: 3,
-        saturation: 88,
-        lightness: 14,
-        animSpeed: 0.004,
-        particles: 26,
+        baseHue: 185,
+        hueSpeed: 0.5,
+        grainIntensity: 25,
+        layers: 4,
+        saturation: 100,
+        lightness: 22,
+        animSpeed: 0.005,
+        particles: 32,
       },
       heroText: "QUESTION 3 / 4",
       heroSubtext: "WHICH SUB-DRIVER WILL HAVE THE MOST IMPACT?",
@@ -228,14 +223,14 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 162,        // vivid electric mint
-        hueSpeed: 0.4,
-        grainIntensity: 35,
-        layers: 3,
-        saturation: 85,
-        lightness: 9,
-        animSpeed: 0.004,
-        particles: 28,
+        baseHue: 162,
+        hueSpeed: 0.5,
+        grainIntensity: 20,
+        layers: 4,
+        saturation: 100,
+        lightness: 18,
+        animSpeed: 0.005,
+        particles: 35,
       },
       heroText: "THE NON-INVASIVE AGE",
       heroSize: 3.5,
@@ -250,20 +245,19 @@ export const slides: SlideConfig[] = [
   },
 
   // ── SLIDE 5: Q4 — Techno-Social Tug-of-War ──
-  // Hot fuchsia (hue 305) → deep violet-purple (hue 272), fully saturated
   {
     id: "q4",
     duration: 15000,
     top: {
       gradient: {
-        baseHue: 305,        // hot fuchsia/magenta
-        hueSpeed: 0.4,
-        grainIntensity: 40,
-        layers: 3,
-        saturation: 95,
-        lightness: 13,
-        animSpeed: 0.004,
-        particles: 26,
+        baseHue: 305,
+        hueSpeed: 0.5,
+        grainIntensity: 25,
+        layers: 4,
+        saturation: 100,
+        lightness: 22,
+        animSpeed: 0.005,
+        particles: 32,
       },
       heroText: "QUESTION 4 / 4",
       heroSubtext: "WHICH SUB-DRIVER WILL HAVE THE MOST IMPACT?",
@@ -271,14 +265,14 @@ export const slides: SlideConfig[] = [
     },
     bottom: {
       gradient: {
-        baseHue: 272,        // deep violet-purple
-        hueSpeed: 0.4,
-        grainIntensity: 35,
-        layers: 3,
-        saturation: 92,
-        lightness: 9,
-        animSpeed: 0.004,
-        particles: 28,
+        baseHue: 272,
+        hueSpeed: 0.5,
+        grainIntensity: 20,
+        layers: 4,
+        saturation: 100,
+        lightness: 18,
+        animSpeed: 0.005,
+        particles: 35,
       },
       heroText: "TECHNO-SOCIAL TUG-OF-WAR",
       heroSize: 3.5,

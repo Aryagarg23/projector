@@ -119,6 +119,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-33.333%); }
+}
+
+.ticker-scroll {
+  animation: ticker-scroll 18s linear infinite;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
