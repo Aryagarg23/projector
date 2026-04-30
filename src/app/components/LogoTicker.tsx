@@ -4,6 +4,8 @@ import type { GradientConfig } from "./slideConfig";
 interface Props {
   config: GradientConfig;
   dpiScale?: number;
+  /** Seconds per full set width (default 18) */
+  speedSeconds?: number;
 }
 
 const LOGOS = [
@@ -40,12 +42,14 @@ function LogoSet({ height, refCb }: { height: number; refCb?: (el: HTMLDivElemen
   );
 }
 
-export function LogoTicker(_props: Props) {
+export function LogoTicker({ speedSeconds = 18 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const setRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [height, setHeight] = useState(0);
   const [setWidth, setSetWidth] = useState(0);
+  const speedRef = useRef(speedSeconds);
+  speedRef.current = speedSeconds;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -96,9 +100,7 @@ export function LogoTicker(_props: Props) {
       const dt = Math.min(0.1, (now - last) / 1000); // clamp big gaps (tab focus etc.)
       last = now;
 
-      // Read live ticker speed from CSS var ("18s" → 18). Fallback 18.
-      const cssVar = getComputedStyle(document.documentElement).getPropertyValue("--ticker-speed").trim();
-      const seconds = parseFloat(cssVar) || 18;
+      const seconds = speedRef.current || 18;
       const pxPerSec = setWidth / seconds;
 
       pos += pxPerSec * dt;

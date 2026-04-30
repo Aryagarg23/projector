@@ -50,6 +50,7 @@ export const defaultRenderSettings = {
   fontScale: 1.0,    // 0.3 – 3.0
   dpiScale: 1.0,     // 0.25 – 8.0 (canvas resolution multiplier)
   tickerSpeed: 18,   // seconds per loop (lower = faster)
+  graphSwapDelay: 45, // seconds between auto-cycling graphs
 };
 
 // ============================================================
@@ -90,6 +91,11 @@ export const renderSliderRanges = {
     min: 0.1,
     max: 5,
     step: 0.05,
+  },
+  graphSwapDelay: {
+    min: 5,
+    max: 180,
+    step: 1,
   },
 };
 

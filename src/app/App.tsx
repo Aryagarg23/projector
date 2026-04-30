@@ -39,6 +39,7 @@ export default function App() {
   const [fontScale, setFontScale] = useState(defaultRenderSettings.fontScale);
   const [dpiScale, setDpiScale] = useState(defaultRenderSettings.dpiScale);
   const [tickerSpeed, setTickerSpeed] = useState(defaultRenderSettings.tickerSpeed);
+  const [graphSwapDelay, setGraphSwapDelay] = useState(defaultRenderSettings.graphSwapDelay);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--ticker-speed", `${tickerSpeed}s`);
@@ -97,15 +98,16 @@ export default function App() {
     setSlideIndex((i) => (i - 1 + slides.length) % slides.length);
   }, []);
 
-  // Auto-cycle graph every 45s. The timer always runs; vote arrivals reset it.
+  // Auto-cycle graph every graphSwapDelay seconds. The timer always runs;
+  // vote arrivals reset it.
   const [cycleResetKey, setCycleResetKey] = useState(0);
   useEffect(() => {
     if (qCount === 0) return;
     const timer = setInterval(() => {
       setGraphQIdx((i) => (i + 1) % qCount);
-    }, 45000);
+    }, Math.max(1000, graphSwapDelay * 1000));
     return () => clearInterval(timer);
-  }, [qCount, cycleResetKey]);
+  }, [qCount, cycleResetKey, graphSwapDelay]);
 
   // When a vote arrives (counts total increases), jump graph to live poll's question
   // and restart the 45s timer.
@@ -340,6 +342,7 @@ export default function App() {
             slide={currentSlide}
             fontScale={fontScale}
             dpiScale={dpiScale}
+            tickerSpeed={tickerSpeed}
           />
         </PerspectivePanel>
       </div>
@@ -374,6 +377,8 @@ export default function App() {
             setDpiScale={setDpiScale}
             tickerSpeed={tickerSpeed}
             setTickerSpeed={setTickerSpeed}
+            graphSwapDelay={graphSwapDelay}
+            setGraphSwapDelay={setGraphSwapDelay}
           />
 
           {/* Reset button */}

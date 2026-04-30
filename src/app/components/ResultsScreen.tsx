@@ -80,10 +80,10 @@ function LiveBottomSurface({
   );
 }
 
-function LiveTopSurface({ slide }: { slide: SlideConfig }) {
+function LiveTopSurface({ slide, tickerSpeed }: { slide: SlideConfig; tickerSpeed: number }) {
   return (
     <div className="relative w-full h-full overflow-hidden">
-      <LogoTicker config={slide.top.gradient} dpiScale={1} />
+      <LogoTicker config={slide.top.gradient} dpiScale={1} speedSeconds={tickerSpeed} />
     </div>
   );
 }
@@ -92,17 +92,34 @@ export function ResultsScreen() {
   const { poll, counts } = useLivePoll();
 
   const [guideUIVisible, setGuideUIVisible] = useState(false);
+
+  // Draft values — sliders write here freely while the panel is open.
   const [tickerSpeed, setTickerSpeed] = useState(defaultRenderSettings.tickerSpeed);
   const [ribbonCount, setRibbonCount] = useState(defaultBgSettings.ribbonCount);
   const [ribbonSpeed, setRibbonSpeed] = useState(defaultBgSettings.ribbonSpeed);
   const [rippleCount, setRippleCount] = useState(defaultBgSettings.rippleCount);
   const [rippleSpeed, setRippleSpeed] = useState(defaultBgSettings.rippleSpeed);
-  const [topCorners, setTopCorners] = useState<Quad | null>(null);
-  const [bottomCorners, setBottomCorners] = useState<Quad | null>(null);
+
+  // Live (committed) values — these flow to children. Updated only when
+  // exiting config mode, so dragging sliders doesn't churn the render loop.
+  const [tickerSpeedLive, setTickerSpeedLive] = useState(defaultRenderSettings.tickerSpeed);
+  const [ribbonCountLive, setRibbonCountLive] = useState(defaultBgSettings.ribbonCount);
+  const [ribbonSpeedLive, setRibbonSpeedLive] = useState(defaultBgSettings.ribbonSpeed);
+  const [rippleCountLive, setRippleCountLive] = useState(defaultBgSettings.rippleCount);
+  const [rippleSpeedLive, setRippleSpeedLive] = useState(defaultBgSettings.rippleSpeed);
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--ticker-speed", `${tickerSpeed}s`);
-  }, [tickerSpeed]);
+    if (guideUIVisible) return;
+    setTickerSpeedLive(tickerSpeed);
+    setRibbonCountLive(ribbonCount);
+    setRibbonSpeedLive(ribbonSpeed);
+    setRippleCountLive(rippleCount);
+    setRippleSpeedLive(rippleSpeed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guideUIVisible]);
+
+  const [topCorners, setTopCorners] = useState<Quad | null>(null);
+  const [bottomCorners, setBottomCorners] = useState<Quad | null>(null);
   const topSizeRef = useRef({ w: 0, h: 0 });
   const bottomSizeRef = useRef({ w: 0, h: 0 });
 
@@ -194,7 +211,7 @@ export function ResultsScreen() {
           onCornersChange={handleTopCornersChange}
           onSizeChange={handleTopSize}
         >
-          <LiveTopSurface slide={liveSlide} />
+          <LiveTopSurface slide={liveSlide} tickerSpeed={tickerSpeedLive} />
         </PerspectivePanel>
       </div>
 
@@ -211,10 +228,10 @@ export function ResultsScreen() {
           <LiveBottomSurface
             slide={liveSlide}
             answers={answers}
-            ribbonCount={ribbonCount}
-            ribbonSpeed={ribbonSpeed}
-            rippleCount={rippleCount}
-            rippleSpeed={rippleSpeed}
+            ribbonCount={ribbonCountLive}
+            ribbonSpeed={ribbonSpeedLive}
+            rippleCount={rippleCountLive}
+            rippleSpeed={rippleSpeedLive}
           />
         </PerspectivePanel>
       </div>
