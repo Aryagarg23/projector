@@ -48,7 +48,7 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let running = true;
@@ -292,21 +292,6 @@ export function GrainyGradient({ config, dpiScale = 1 }: Props) {
 
       ctx.restore();
 
-      // ── Grain overlay (pre-baked tile, stamped via drawImage) ───────────────
-      const grainAmt = cfg.grainIntensity;
-      if (grainAmt > 0 && grainTileRef.current) {
-        const tile = grainTileRef.current;
-        ctx.save();
-        ctx.globalAlpha = Math.min(0.35, grainAmt / 100);
-        ctx.globalCompositeOperation = "overlay";
-        // Tile the noise across the full canvas
-        for (let y = 0; y < ch; y += tile.height) {
-          for (let x = 0; x < cw; x += tile.width) {
-            ctx.drawImage(tile, x, y);
-          }
-        }
-        ctx.restore();
-      }
 
       frameRef.current = requestAnimationFrame(animate);
     };
