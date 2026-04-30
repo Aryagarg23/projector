@@ -8,7 +8,7 @@ interface Props {
 }
 
 const LOGOS = [
-  { src: "/logos/UC.svg", alt: "University of Cincinnati" },
+  { src: "/logos/UC.png", alt: "University of Cincinnati" },
   { src: "/logos/1819.svg", alt: "1819 Innovation Hub" },
   { src: "/logos/foresight_lab.svg", alt: "Foresight Lab" },
 ];
